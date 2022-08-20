@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  go:
+    container_name: labotgo
+    platform: 'linux/amd64'
+    build: .
+    tty: true
+    volumes:
+        - .:/go/src/app
