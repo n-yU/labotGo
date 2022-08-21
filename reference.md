@@ -15,5 +15,8 @@
 - [slack package - github.com/slack-go/slack - Go Packages](https://pkg.go.dev/github.com/slack-go/slack)
 - [【Go】slack-go を使用して Slack にメッセージを投稿する](https://zenn.dev/kou_pg_0131/articles/go-slack-go-usage)
 
-# Slack
+## Slack
 - [Slack API を使用してメッセージを投稿する](https://zenn.dev/kou_pg_0131/articles/slack-api-post-message)
+- [GoでSlackのSlashコマンドを作る | by Teppei Fukuda | Medium](https://medium.com/@knqyf263/go%E3%81%A7slack%E3%81%AEslash%E3%82%B3%E3%83%9E%E3%83%B3%E3%83%89%E3%82%92%E4%BD%9C%E3%82%8B-d2845c4540b2)
+- [Slack の Socket Mode API を使ってみた | Technology | KLablog | KLab株式会社](https://www.klab.com/jp/blog/tech/2021/0201-slack.html)
+- [Slack ソケットモードの最も簡単な始め方 - Qiita](https://qiita.com/seratch/items/1a460c08c3e245b56441)
