@@ -79,16 +79,7 @@ func main() {
 				}
 				logger.Printf("Slach Command を受け取りました: %+v\n", cmd)
 
-				payload := map[string]interface{}{
-					"blocks": []slack.Block{slack.NewSectionBlock(
-						&slack.TextBlockObject{Type: slack.MarkdownType, Text: "foo"},
-						nil,
-						slack.NewAccessory(slack.NewButtonBlockElement(
-							"", "somevalue", &slack.TextBlockObject{Type: slack.PlainTextType, Text: "bar"},
-						)),
-					)},
-				}
-
+				payload := listen(cmd)
 				client.Ack(*evt.Request, payload)
 			default:
 				logger.Printf("不明なイベントタイプ %s を受け取りました\n", evt.Type)
