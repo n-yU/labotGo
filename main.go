@@ -11,7 +11,10 @@ import (
 	"github.com/slack-go/slack/socketmode"
 )
 
-var logger *log.Logger
+var (
+	logger *log.Logger
+	client *socketmode.Client
+)
 
 func main() {
 	// ロガー生成 & 環境変数読み込み
@@ -37,7 +40,7 @@ func main() {
 
 	// クライアント生成
 	api := slack.New(botToken, slack.OptionDebug(DebugMode), slack.OptionLog(logger), slack.OptionAppLevelToken(appToken))
-	client := socketmode.New(api, socketmode.OptionDebug(DebugMode), socketmode.OptionLog(logger))
+	client = socketmode.New(api, socketmode.OptionDebug(DebugMode), socketmode.OptionLog(logger))
 
 	go func() {
 		for evt := range client.Events {
@@ -94,11 +97,12 @@ func main() {
 	_, _, err := api.PostMessage(DefaultCh, launch_text)
 	if err != nil {
 		logger.Println("labotGo の起動に失敗しました")
-		logger.Printf("Tips: labotGo は起動時に動作チェックのため，%s にも追加する必要があります\n", DefaultCh)
+		logger.Printf("Tips: labotGo は起動時に動作チェックのため，デフォルトチャンネル %s にも追加する必要があります\n", DefaultCh)
+		logger.Println("デフォルトチャンネルは .env から変更することもできます")
 		logger.Fatal(err)
 	}
 	logger.Printf("labotGo %s を起動しました\n", Version)
 
-	// Sokect Mode
+	// Socket Mode
 	client.Run()
 }
