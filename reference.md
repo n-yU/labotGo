@@ -4,6 +4,8 @@
 ## Docker
 - [【Go 言語】 Docker 上 で Gin を動かすまで - 猫でもわかるWebプログラミングと副業](https://www.utakata.work/entry//golang/tutorial/2-docker-go-gin)
 - [Golang - Dockerfileの最小構成 - Qiita](https://qiita.com/Yuuki557/items/3d088de91ab86bc71600)
+- [Go言語: ファイルの存在をちゃんとチェックする実装? - Qiita](https://qiita.com/suin/items/b9c0f92851454dc6d461)
+- [Go言語でファイル操作: ファイルを作って書き込む - Qiita](https://qiita.com/suin/items/7eb4fc405ac73846a9b1)
 
 ## Golang
 - [スターティングGo言語（松尾 愛賀）｜翔泳社の本](https://www.shoeisha.co.jp/book/detail/9784798142418)
@@ -27,6 +29,10 @@
 - [Slack ソケットモードの最も簡単な始め方 - Qiita](https://qiita.com/seratch/items/1a460c08c3e245b56441)
 - [Slack ペイロードに含まれる response_url を完全に理解する - Qiita](https://qiita.com/seratch/items/ed29acd565af36e65072)
 
-# Block Kit
+## Block Kit
 - [Block KitでリッチなSlackアプリを作る -乗換経路案内での実例- - Qiita](https://qiita.com/navitime_tech/items/85de33072486e7d323a5)
 - [javascript - Slack Block-kit Multi_users_select Remove defaults app - Stack Overflow](https://stackoverflow.com/questions/67975904/slack-block-kit-multi-users-select-remove-defaults-app)
+
+## YAML
+- [go-yaml/yaml: YAML support for the Go language.](https://github.com/go-yaml/yaml)
+- [Go言語(golang) YAMLの使い方 - golangの日記](https://golang.hateblo.jp/entry/2018/11/08/183555)

@@ -3,6 +3,7 @@ package util
 
 import (
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/slack-go/slack"
@@ -18,6 +19,9 @@ const (
 	Ephemeral = slack.ResponseTypeEphemeral
 	Markdown  = slack.MarkdownType
 	PlainText = slack.PlainTextType
+
+	MemberDataPath = "/go/src/app/member/data.yml"
+	TeamDataPath   = "/go/src/app/team/data.yml"
 )
 
 var (
@@ -33,4 +37,11 @@ func LoadEnv() {
 		Logger.Println("環境変数の読み込みに失敗しました")
 		Logger.Fatal(err)
 	}
+}
+
+// ファイル存在 チェック
+func FileExists(filename string) bool {
+	// ref.) https://qiita.com/suin/items/b9c0f92851454dc6d461
+	_, err := os.Stat(filename)
+	return err == nil
 }

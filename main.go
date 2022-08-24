@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
+	"gopkg.in/yaml.v3"
 )
 
 // labotGo
@@ -113,11 +115,56 @@ func main() {
 	if err := post.Start(defaultCh); err != nil {
 		Logger.Println("labotGo の起動に失敗しました")
 		Logger.Printf("Tips: labotGo は起動時に動作チェックのため，デフォルトチャンネル %s にも追加する必要があります\n", defaultCh)
-		Logger.Println("デフォルトチャンネルは .env から変更することもできます")
+		Logger.Println("Tips: デフォルトチャンネルは .env から変更することもできます")
 		Logger.Fatal(err)
 	}
 	Logger.Printf("labotGo %s を起動しました\n", Version)
 
+	// 初回起動チェック（データファイル生成）
+	isFirstRun, err := checkFirstRun()
+	if isFirstRun {
+		if err != nil {
+			Logger.Println("初回起動のため，データファイルの生成を試みましたが失敗しました")
+			Logger.Println("詳しくは次のエラーを確認してください")
+			Logger.Fatal(err)
+		}
+		Logger.Println("初回起動のため，以下のデータファイルを生成しました")
+		Logger.Printf("- メンバーデータ: %s\n", MemberDataPath)
+		Logger.Printf("- チームデータ  : %s\n", TeamDataPath)
+	}
+	Logger.Println("Tips: ボットが正常に動作しなくなる恐れがあるため，メンバー／チームデータは直接編集しないでください")
+
 	// Socket Mode
 	SocketModeClient.Run()
+}
+
+// 初回起動チェック
+func checkFirstRun() (isFirstRun bool, err error) {
+	var bs []byte
+
+	// データファイル存在 チェック
+	isMemberData, isTeamData := FileExists(MemberDataPath), FileExists(TeamDataPath)
+	if isMemberData && isTeamData {
+		return isFirstRun, err
+	}
+
+	// データファイル 生成
+	isFirstRun = true
+	if _, err := os.Create(MemberDataPath); err != nil {
+		return isFirstRun, err
+	}
+	if _, err := os.Create(TeamDataPath); err != nil {
+		return isFirstRun, err
+	}
+
+	// チームデータ 初期設定
+	defaultTeams := make(map[string][]string)
+	defaultTeams["all"] = []string{}
+	bs, err = yaml.Marshal(&defaultTeams)
+	if err != nil {
+		return isFirstRun, err
+	}
+	err = ioutil.WriteFile(TeamDataPath, bs, os.ModePerm)
+
+	return isFirstRun, err
 }

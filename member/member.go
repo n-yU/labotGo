@@ -3,21 +3,19 @@ package member
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/n-yU/labotGo/post"
 	. "github.com/n-yU/labotGo/util"
 	"github.com/slack-go/slack"
+	"gopkg.in/yaml.v3"
 )
 
 // コマンド応答ブロック 取得
-func GetBlocks(cmdValues []string) ([]slack.Block, string, bool) {
-	var (
-		blocks       []slack.Block
-		responseType string
-		ok           bool
-		subType      = cmdValues[0]
-	)
+func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, ok bool) {
+	var subType = cmdValues[0]
 
 	switch subType {
 	case "add":
@@ -37,14 +35,43 @@ func GetBlocks(cmdValues []string) ([]slack.Block, string, bool) {
 }
 
 // 指定アクション 実行
-func Action(actionId string, callback slack.InteractionCallback) error {
-	var err error
-
+func Action(actionId string, callback slack.InteractionCallback) (err error) {
 	switch {
 	case strings.HasSuffix(actionId, "Add"):
 		blocks := AddMember(callback.BlockActionState.Values)
 		err = post.PostMessage(callback, blocks, Ephemeral)
 	}
 
+	return err
+}
+
+// メンバーデータ 読み込み
+func LoadData() (data map[string]interface{}, err error) {
+	f, err := os.Open(MemberDataPath)
+	if err != nil {
+		return data, err
+	}
+	bs, err := ioutil.ReadAll(f)
+	if err != nil {
+		return data, err
+	}
+
+	if len(bs) > 0 {
+		err = yaml.Unmarshal([]byte(bs), &data)
+	} else {
+		data = map[string]interface{}{}
+	}
+
+	return data, err
+}
+
+// メンバーデータ 更新
+func UpdateData(data map[string]interface{}) (err error) {
+	bs, err := yaml.Marshal(&data)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(MemberDataPath, bs, os.ModePerm)
 	return err
 }

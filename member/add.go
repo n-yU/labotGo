@@ -13,7 +13,7 @@ import (
 // Block Kit: メンバー追加リクエスト
 func getBlockAdd() []slack.Block {
 	// ヘッダー
-	headerText := ":information_source: labotGo にメンバーを追加します\n\n"
+	headerText := post.InfoText("labotGo にメンバーを追加します\n\n")
 	headerText += "*追加したいユーザと所属チームを選択してください*"
 	headerSection := slack.NewSectionBlock(slack.NewTextBlockObject(Markdown, headerText, false, false), nil, nil)
 
@@ -56,61 +56,98 @@ func getBlockAdd() []slack.Block {
 }
 
 // メンバー追加
-func AddMember(blockActions map[string]map[string]slack.BlockAction) []slack.Block {
+func AddMember(blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
 	var (
-		userId string
-		teams  []string
-		blocks []slack.Block
-		ok     bool
+		userId       string
+		teams        []string
+		ok           bool
+		data         map[string]interface{}
+		dataTipsText = []string{
+			fmt.Sprintf("データファイル `%s` が存在しないか，ファイル／データ形式が不適切です\n", MemberDataPath),
+			"データファイルを削除した上で，botを再起動すると解消されます（但しデータはリセットされます）",
+		}
 	)
 
 	Logger.Printf("メンバー追加リクエスト: %+v\n", blockActions)
 
-	// ユーザID・所属チーム 取得
-	for _, action := range blockActions {
-		for actionId, values := range action {
-			switch actionId {
-			case "memberAddSelectUser":
-				userId = values.SelectedConversation
-			case "memberAddSelectTeams":
-				for _, opt := range values.SelectedOptions {
-					teams = append(teams, opt.Value)
+	// メンバーデータ 読み込み
+	data, err := LoadData()
+	if err != nil {
+		text := "メンバーデータの読み込みに失敗しました"
+		headerSection := slack.NewSectionBlock(
+			slack.NewTextBlockObject(PlainText, post.ErrText(text), false, false), nil, nil,
+		)
+		tipsSection := post.CreateTipsSection(dataTipsText)
+		blocks = []slack.Block{headerSection, tipsSection}
+
+		Logger.Println(text)
+		Logger.Println(err)
+	} else {
+		// ユーザID・所属チーム 取得
+		for _, action := range blockActions {
+			for actionId, values := range action {
+				switch actionId {
+				case "memberAddSelectUser":
+					userId = values.SelectedConversation
+				case "memberAddSelectTeams":
+					for _, opt := range values.SelectedOptions {
+						teams = append(teams, opt.Value)
+					}
+				default:
 				}
-			default:
 			}
 		}
-	}
-	Logger.Printf("ユーザID: %s / チームリスト: %v\n", userId, teams)
+		Logger.Printf("ユーザID: %s / チームリスト: %v\n", userId, teams)
 
-	// バリデーションチェック
-	isEmptyUserId, isEmptyTeams := (userId == ""), len(teams) == 0
-	if isEmptyUserId && isEmptyTeams {
-		text := post.ErrText("ユーザ／チームともに選択されていません")
-		blocks = post.CreateSingleTextBlock(text)
-	} else if isEmptyUserId {
-		text := post.ErrText("登録したいユーザが指定されていません")
-		blocks = post.CreateSingleTextBlock(text)
-	} else if isEmptyTeams {
-		headerText := post.ErrText("所属チームは1つ以上選択してください")
-		headerSection := slack.NewSectionBlock(
-			slack.NewTextBlockObject(PlainText, headerText, false, false), nil, nil,
-		)
-		tipsText := []string{"チーム `all` は全メンバーが入るチームです．削除する必要はありません．"}
-		tipsSection := post.CreateTipsSection(tipsText)
-		blocks = []slack.Block{headerSection, tipsSection}
-	} else {
-		headerText := post.ScsText("*以下ユーザのメンバー追加に成功しました*")
-		headerSection := slack.NewSectionBlock(
-			slack.NewTextBlockObject(Markdown, headerText, false, false), nil, nil,
-		)
-		memberInfoUserId := slack.NewTextBlockObject(Markdown, fmt.Sprintf("*ユーザ*:\n<@%s>", userId), false, false)
-		memberInfoTeams := slack.NewTextBlockObject(Markdown, fmt.Sprintf("*チーム*:\n%s", strings.Join(teams, ", ")), false, false)
-		memberInfoField := []*slack.TextBlockObject{memberInfoUserId, memberInfoTeams}
-		memberInfoSection := slack.NewSectionBlock(nil, memberInfoField, nil)
+		// バリデーションチェック
+		isEmptyUserId, isEmptyTeams := (userId == ""), len(teams) == 0
+		if isEmptyUserId && isEmptyTeams {
+			text := post.ErrText("ユーザ／チームともに選択されていません")
+			blocks = post.CreateSingleTextBlock(text)
+		} else if isEmptyUserId {
+			text := post.ErrText("登録したいユーザが指定されていません")
+			blocks = post.CreateSingleTextBlock(text)
+		} else if isEmptyTeams {
+			headerText := post.ErrText("所属チームは1つ以上選択してください")
+			headerSection := slack.NewSectionBlock(
+				slack.NewTextBlockObject(PlainText, headerText, false, false), nil, nil,
+			)
+			tipsText := []string{"チーム `all` は全メンバーが入るチームです．削除する必要はありません．"}
+			tipsSection := post.CreateTipsSection(tipsText)
+			blocks = []slack.Block{headerSection, tipsSection}
+		} else {
+			// メンバーデータ 更新
+			data[userId] = teams
 
-		tipsText := []string{"続けてメンバーを追加したい場合，同じフォームを再利用できます"}
-		tipsSection := post.CreateTipsSection(tipsText)
-		blocks, ok = []slack.Block{headerSection, memberInfoSection, tipsSection}, true
+			if err = UpdateData(data); err != nil {
+				text := "メンバーデータの更新に失敗しました"
+				headerSection := slack.NewSectionBlock(
+					slack.NewTextBlockObject(PlainText, post.ErrText(text), false, false), nil, nil,
+				)
+				tipsSection := post.CreateTipsSection(dataTipsText)
+				blocks = []slack.Block{headerSection, tipsSection}
+
+				Logger.Println(text)
+				Logger.Println(err)
+			} else {
+				headerText := post.ScsText("*以下ユーザのメンバー追加に成功しました*")
+				headerSection := slack.NewSectionBlock(
+					slack.NewTextBlockObject(Markdown, headerText, false, false), nil, nil,
+				)
+				memberInfoUserId := slack.NewTextBlockObject(
+					Markdown, fmt.Sprintf("*ユーザ*:\n<@%s>", userId), false, false,
+				)
+				memberInfoTeams := slack.NewTextBlockObject(
+					Markdown, fmt.Sprintf("*チーム*:\n%s", strings.Join(teams, ", ")), false, false,
+				)
+				memberInfoField := []*slack.TextBlockObject{memberInfoUserId, memberInfoTeams}
+				memberInfoSection := slack.NewSectionBlock(nil, memberInfoField, nil)
+
+				tipsText := []string{"続けてメンバーを追加したい場合，同じフォームを再利用できます"}
+				tipsSection := post.CreateTipsSection(tipsText)
+				blocks, ok = []slack.Block{headerSection, memberInfoSection, tipsSection}, true
+			}
+		}
 	}
 
 	if ok {
