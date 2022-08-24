@@ -1,4 +1,4 @@
-module github.com/n-yU/labotgo
+module github.com/n-yU/labotGo
 
 go 1.19
 

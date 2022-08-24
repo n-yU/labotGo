@@ -16,4 +16,6 @@
 
 .DS_Store
 .env
-!lg.exe
+member.yml
+team.yml
+!labotGo.exe
