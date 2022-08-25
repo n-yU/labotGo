@@ -7,6 +7,7 @@ import (
 
 	"github.com/n-yU/labotGo/member"
 	"github.com/n-yU/labotGo/post"
+	"github.com/n-yU/labotGo/team"
 	. "github.com/n-yU/labotGo/util"
 	"github.com/slack-go/slack"
 )
@@ -37,26 +38,38 @@ func Command(cmd slack.SlashCommand) error {
 	userId, cmdText := cmd.UserID, cmd.Text
 	Logger.Printf("受信コマンド (from:%s): %s\n", userId, cmdText)
 	cmdType, cmdValues := splitCmd(cmdText)
+	isEmptyValues := (len(cmdValues) == 0)
 
 	// コマンドタイプ別 処理
 	switch cmdType {
 	case "hello":
-		if len(cmdValues) == 0 {
+		if isEmptyValues {
 			text := "*Hello, World!*"
 			blocks, responseType, ok = post.CreateSingleTextBlock(text), InChannel, true
 		} else {
-			text := fmt.Sprintf("%s *hello* に引数を与えることはできません\n", Cmd)
+			text := post.ErrText(fmt.Sprintf("%s *%s* に引数を与えることはできません\n", Cmd, cmdType))
 			blocks, responseType = post.CreateSingleTextBlock(text), Ephemeral
 		}
 	case "member":
-		if len(cmdValues) == 0 {
-			text := fmt.Sprintf("%s *member* には1つ以上の引数を与える必要があります\n", cmd)
+		if isEmptyValues {
+			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります\n", Cmd, cmdType))
 			blocks, responseType = post.CreateSingleTextBlock(text), Ephemeral
 		} else {
 			blocks, responseType, ok = member.GetBlocks(cmdValues)
 		}
+	case "team":
+		if isEmptyValues {
+			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります\n", Cmd, cmdType))
+			blocks, responseType = post.CreateSingleTextBlock(text), Ephemeral
+		} else {
+			blocks, responseType, ok = team.GetBlocks(cmdValues)
+		}
+	case "shuffle":
+
+	case "group":
+
 	default:
-		text := fmt.Sprintf("コマンド %s *%s* を使用することはできません\n", Cmd, cmdType)
+		text := post.ErrText(fmt.Sprintf("コマンド %s *%s* を使用することはできません\n", Cmd, cmdType))
 		blocks, responseType = post.CreateSingleTextBlock(text), Ephemeral
 	}
 
@@ -73,9 +86,7 @@ func Command(cmd slack.SlashCommand) error {
 }
 
 // ブロックアクション 受信処理
-func BlockAction(callback slack.InteractionCallback) error {
-	var err error
-
+func BlockAction(callback slack.InteractionCallback) (err error) {
 	// アクションID 取得
 	if len(callback.ActionCallback.BlockActions) == 0 {
 		return err
@@ -86,6 +97,8 @@ func BlockAction(callback slack.InteractionCallback) error {
 	switch {
 	case strings.HasPrefix(actionId, "member"):
 		err = member.Action(actionId, callback)
+	case strings.HasPrefix(actionId, "team"):
+		err = team.Action(actionId, callback)
 	default:
 		Logger.Printf("不明なアクション %s を受け取りました\n", actionId)
 	}

@@ -22,6 +22,8 @@ const (
 
 	MemberDataPath = "/go/src/app/member/data.yml"
 	TeamDataPath   = "/go/src/app/team/data.yml"
+
+	TipsMemberTeam = "*labotGo* に追加されたユーザを `メンバー` とし， `メンバー` のグループを `チーム` と呼びます"
 )
 
 var (

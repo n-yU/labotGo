@@ -15,9 +15,7 @@ import (
 
 // コマンド応答ブロック 取得
 func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, ok bool) {
-	var subType = cmdValues[0]
-
-	switch subType {
+	switch subType := cmdValues[0]; subType {
 	case "add":
 		blocks, responseType, ok = getBlockAdd(), Ephemeral, true
 	case "edit":

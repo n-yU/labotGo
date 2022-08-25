@@ -67,3 +67,16 @@ func ScsText(text string) string {
 func InfoText(text string) string {
 	return fmt.Sprintf(":diamond_shape_with_a_dot_inside: %s", text)
 }
+
+// 頻用構文: slack.NewTextBlockObject()
+func TxtBlockObj(elementType string, text string) *slack.TextBlockObject {
+	return slack.NewTextBlockObject(elementType, text, false, false)
+}
+
+// 頻用テキスト: データファイルエラー Tips
+func TipsDataError(dataPath string) []string {
+	return []string{
+		fmt.Sprintf("データファイル `%s` が存在しないか，ファイル／データ形式が不適切です\n", dataPath),
+		"データファイルを削除した上で，botを再起動すると解消されます（但しデータはリセットされます）",
+	}
+}
