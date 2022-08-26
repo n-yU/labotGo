@@ -3,18 +3,17 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
+	"github.com/n-yU/labotGo/data"
 	"github.com/n-yU/labotGo/listen"
 	"github.com/n-yU/labotGo/post"
 	. "github.com/n-yU/labotGo/util"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
-	"gopkg.in/yaml.v3"
 )
 
 // labotGo
@@ -140,8 +139,6 @@ func main() {
 
 // 初回起動チェック
 func checkFirstRun() (isFirstRun bool, err error) {
-	var bs []byte
-
 	// データファイル存在 チェック
 	isMemberData, isTeamData := FileExists(MemberDataPath), FileExists(TeamDataPath)
 	if isMemberData && isTeamData {
@@ -157,14 +154,23 @@ func checkFirstRun() (isFirstRun bool, err error) {
 		return isFirstRun, err
 	}
 
-	// チームデータ 初期設定
-	defaultTeams := make(map[string][]string)
-	defaultTeams["all"] = []string{}
-	bs, err = yaml.Marshal(&defaultTeams)
+	// メンバーデータ 初期設定
+	memberData := map[string][]string{}
+	response, err := SocketModeClient.AuthTest()
 	if err != nil {
-		return isFirstRun, err
+		log.Fatal(err)
 	}
-	err = ioutil.WriteFile(TeamDataPath, bs, os.ModePerm)
+	memberData[response.UserID] = []string{"all"}
+	if err := data.UpdateMember(memberData); err != nil {
+		Logger.Fatal(err)
+	}
+
+	// チームデータ 初期設定
+	teamData := map[string][]string{}
+	teamData["all"] = []string{response.UserID}
+	if err := data.UpdateTeam(teamData); err != nil {
+		Logger.Fatal(err)
+	}
 
 	return isFirstRun, err
 }

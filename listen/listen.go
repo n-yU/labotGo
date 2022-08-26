@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/n-yU/labotGo/aid"
 	"github.com/n-yU/labotGo/member"
 	"github.com/n-yU/labotGo/post"
 	"github.com/n-yU/labotGo/team"
@@ -45,22 +46,22 @@ func Command(cmd slack.SlashCommand) error {
 	case "hello":
 		if isEmptyValues {
 			text := "*Hello, World!*"
-			blocks, responseType, ok = post.CreateSingleTextBlock(text), InChannel, true
+			blocks, responseType, ok = post.SingleTextBlock(text), InChannel, true
 		} else {
 			text := post.ErrText(fmt.Sprintf("%s *%s* に引数を与えることはできません\n", Cmd, cmdType))
-			blocks, responseType = post.CreateSingleTextBlock(text), Ephemeral
+			blocks, responseType = post.SingleTextBlock(text), Ephemeral
 		}
 	case "member":
 		if isEmptyValues {
 			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります\n", Cmd, cmdType))
-			blocks, responseType = post.CreateSingleTextBlock(text), Ephemeral
+			blocks, responseType = post.SingleTextBlock(text), Ephemeral
 		} else {
 			blocks, responseType, ok = member.GetBlocks(cmdValues)
 		}
 	case "team":
 		if isEmptyValues {
 			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります\n", Cmd, cmdType))
-			blocks, responseType = post.CreateSingleTextBlock(text), Ephemeral
+			blocks, responseType = post.SingleTextBlock(text), Ephemeral
 		} else {
 			blocks, responseType, ok = team.GetBlocks(cmdValues)
 		}
@@ -70,7 +71,7 @@ func Command(cmd slack.SlashCommand) error {
 
 	default:
 		text := post.ErrText(fmt.Sprintf("コマンド %s *%s* を使用することはできません\n", Cmd, cmdType))
-		blocks, responseType = post.CreateSingleTextBlock(text), Ephemeral
+		blocks, responseType = post.SingleTextBlock(text), Ephemeral
 	}
 
 	// コマンド処理 成功有無通知
@@ -91,16 +92,16 @@ func BlockAction(callback slack.InteractionCallback) (err error) {
 	if len(callback.ActionCallback.BlockActions) == 0 {
 		return err
 	}
-	actionId := callback.ActionCallback.BlockActions[0].ActionID
+	actionID := callback.ActionCallback.BlockActions[0].ActionID
 
 	// アクションID別 処理
 	switch {
-	case strings.HasPrefix(actionId, "member"):
-		err = member.Action(actionId, callback)
-	case strings.HasPrefix(actionId, "team"):
-		err = team.Action(actionId, callback)
+	case strings.HasPrefix(actionID, aid.BaseMember):
+		err = member.Action(actionID, callback)
+	case strings.HasPrefix(actionID, aid.BaseTeam):
+		err = team.Action(actionID, callback)
 	default:
-		Logger.Printf("不明なアクション %s を受け取りました\n", actionId)
+		Logger.Printf("不明なアクション %s を受け取りました\n", actionID)
 	}
 
 	return err
