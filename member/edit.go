@@ -66,8 +66,7 @@ func getBlockEditTeamsSelect(blockActions map[string]map[string]slack.BlockActio
 		for actionId, values := range action {
 			switch actionId {
 			case aid.EditMemberSelectMember:
-				userID = values.SelectedOption.Value
-				userID = userID[2 : len(userID)-1]
+				userID = data.RawUserID(values.SelectedOption.Value)
 			default:
 			}
 		}

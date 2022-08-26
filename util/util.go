@@ -37,6 +37,7 @@ var (
 	Logger           *log.Logger
 	Api              *slack.Client
 	SocketModeClient *socketmode.Client
+	AllUserIDs       []string
 )
 
 // 環境変数 読み込み

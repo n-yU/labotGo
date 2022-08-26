@@ -77,8 +77,8 @@ func AddMember(blockActions map[string]map[string]slack.BlockAction) (blocks []s
 					teamName = values.Value
 				case aid.AddTeamSelectMembers:
 					for _, uId := range values.SelectedOptions {
-						userID := string(uId.Value)
-						members = append(members, userID[2:len(userID)-1])
+						userID := data.RawUserID(string(uId.Value))
+						members = append(members, userID)
 					}
 				default:
 				}

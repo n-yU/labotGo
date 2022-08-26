@@ -133,6 +133,9 @@ func main() {
 	}
 	Logger.Println("Tips: ボットが正常に動作しなくなる恐れがあるため，メンバー／チームデータは直接編集しないでください")
 
+	// 全ユーザIDリスト 取得
+	AllUserIDs = data.GetAllUserIDs(DeveloperMode)
+
 	// Socket Mode
 	SocketModeClient.Run()
 }

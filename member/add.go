@@ -15,11 +15,16 @@ import (
 // Block Kit: メンバー追加リクエスト
 func getBlockAdd() (blocks []slack.Block) {
 	var (
-		teamData map[string][]string
-		err      error
+		memberData map[string][]string
+		teamData   map[string][]string
+		err        error
 	)
 
-	// チームデータ 読み込み
+	// メンバー・チームデータ 読み込み
+	if memberData, err = data.LoadMember(); err != nil {
+		blocks = data.GetMemberErrBlocks(err, DataLoadErr)
+		return blocks
+	}
 	if teamData, err = data.LoadTeam(); err != nil {
 		blocks = data.GetTeamErrBlocks(err, DataLoadErr)
 		return blocks
@@ -38,14 +43,13 @@ func getBlockAdd() (blocks []slack.Block) {
 	headerTipsSection := post.TipsSection(headerTipsText)
 
 	// ブロック: ユーザ選択
-	// ref.) https://stackoverflow.com/questions/67975904/slack-block-kit-multi-users-select-remove-defaults-app
-	userOptionText := post.TxtBlockObj(PlainText, "ユーザを選択")
-	userOption := &slack.SelectBlockElement{
-		Type: slack.OptTypeConversations, Placeholder: userOptionText, ActionID: aid.AddMemberSelectUser,
-		Filter: &slack.SelectBlockElementFilter{Include: []string{"im"}, ExcludeBotUsers: !DeveloperMode},
-	}
+	userSelectOptionText := post.TxtBlockObj(PlainText, "ユーザを選択")
+	userOption := post.CreateOptionBlockObject(data.GetAllNonMembers(memberData), true)
+	userSelectOption := slack.NewOptionsSelectBlockElement(
+		slack.OptTypeStatic, userSelectOptionText, aid.AddMemberSelectUser, userOption...,
+	)
 	userSelectText := post.TxtBlockObj(Markdown, "*ユーザ*")
-	userSelectSection := slack.NewSectionBlock(userSelectText, nil, slack.NewAccessory(userOption))
+	userSelectSection := slack.NewSectionBlock(userSelectText, nil, slack.NewAccessory(userSelectOption))
 
 	// ブロック: チーム選択
 	teamsSelectSection := post.SelectTeamsSection(data.GetAllTeams(teamData), aid.AddMemberSelectTeams, []string{"all"})
@@ -77,7 +81,7 @@ func AddMember(blockActions map[string]map[string]slack.BlockAction) (blocks []s
 			for actionId, values := range action {
 				switch actionId {
 				case aid.AddMemberSelectUser:
-					userID = values.SelectedConversation
+					userID = data.RawUserID(values.SelectedOption.Value)
 				case aid.AddMemberSelectTeams:
 					for _, opt := range values.SelectedOptions {
 						teams = append(teams, opt.Value)
