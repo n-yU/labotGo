@@ -57,7 +57,7 @@ func (td TeamsData) GetAllNames() (teamNames []string) {
 // 全編集可能チームリスト 取得
 func (td TeamsData) GetAllEditedNames() (teamName []string) {
 	for _, t := range td.GetAllNames() {
-		if t != "all" {
+		if t != MasterTeamName {
 			teamName = append(teamName, t)
 		}
 	}
@@ -89,11 +89,11 @@ func (td TeamsData) GetErrBlocks(err error, dataErrType string) []slack.Block {
 func (td TeamsData) SynchronizeMember() (err error) {
 	md := MembersData{}
 	for teamName, team := range td {
-		for _, mID := range team.UserIDs {
-			if _, ok := md[mID]; !ok {
-				md[mID] = new(MemberData)
+		for _, uID := range team.UserIDs {
+			if _, ok := md[uID]; !ok {
+				md[uID] = new(MemberData)
 			}
-			md[mID].TeamNames = append(md[mID].TeamNames, teamName)
+			md[uID].TeamNames = append(md[uID].TeamNames, teamName)
 		}
 	}
 

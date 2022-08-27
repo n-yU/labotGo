@@ -40,13 +40,7 @@ func getBlockAdd() []slack.Block {
 	headerTipsSection := post.TipsSection(headerTipsText)
 
 	// ブロック: ユーザ選択
-	userSelectOptionText := post.TxtBlockObj(PlainText, "ユーザを選択")
-	userOption := post.OptionBlockObjectList(data.GetAllNonMembers(md), true)
-	userSelectOption := slack.NewOptionsSelectBlockElement(
-		slack.OptTypeStatic, userSelectOptionText, aid.AddMemberSelectUser, userOption...,
-	)
-	userSelectText := post.TxtBlockObj(Markdown, "*ユーザ*")
-	userSelectSection := slack.NewSectionBlock(userSelectText, nil, slack.NewAccessory(userSelectOption))
+	userSelectSection := post.SelectMembersSection(data.GetAllNonMembers(md), aid.AddMemberSelectUser, []string{}, false, false)
 
 	// ブロック: チーム選択
 	teamsSelectSection := post.SelectTeamsSection(td.GetAllNames(), aid.AddMemberSelectTeams, []string{MasterTeamName})

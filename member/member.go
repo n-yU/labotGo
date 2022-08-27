@@ -15,33 +15,41 @@ import (
 func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, ok bool) {
 	switch subType := cmdValues[0]; subType {
 	case "add":
-		blocks, responseType, ok = getBlockAdd(), Ephemeral, true
+		blocks, ok = getBlockAdd(), true
 	case "edit":
-		blocks, responseType, ok = getBlockEditMemberSelect(), Ephemeral, true
+		blocks, ok = getBlockEditMemberSelect(), true
 	case "delete":
-
+		blocks, ok = getBlockDeleteMemberSelect(), true
 	case "list":
 
 	default:
-		text := post.ErrText(fmt.Sprintf("コマンド %s member *%s* を使用することはできません\n", Cmd, subType))
-		blocks, responseType, ok = post.SingleTextBlock(text), Ephemeral, false
+		text := post.ErrText(fmt.Sprintf("コマンド %s member *%s* を使用することはできません", Cmd, subType))
+		blocks, ok = post.SingleTextBlock(text), false
 	}
 
+	responseType = Ephemeral
 	return blocks, responseType, ok
 }
 
 // 指定アクション 実行
 func Action(actionID string, callback slack.InteractionCallback) (err error) {
+	var blocks []slack.Block
 	switch {
 	case actionID == aid.AddMember:
-		blocks := AddMember(callback.BlockActionState.Values)
-		err = post.PostMessage(callback, blocks, Ephemeral)
+		blocks = AddMember(callback.BlockActionState.Values)
 	case actionID == aid.EditMemberSelectMember:
-		blocks := getBlockEditTeamsSelect(callback.BlockActionState.Values)
-		err = post.PostMessage(callback, blocks, Ephemeral)
+		blocks = getBlockEditTeamsSelect(callback.BlockActionState.Values)
 	case strings.HasPrefix(actionID, aid.EditMember+"_"):
 		userID := strings.Split(actionID, "_")[1]
-		blocks := EditMember(callback.BlockActionState.Values, userID)
+		blocks = EditMember(callback.BlockActionState.Values, userID)
+	case actionID == aid.DeleteMemberSelectMember:
+		blocks = DeleteMemberConfirm(callback.BlockActionState.Values)
+	case strings.HasPrefix(actionID, aid.DeleteMember+"_"):
+		userID := strings.Split(actionID, "_")[1]
+		blocks = DeleteMember(callback.BlockActionState.Values, userID)
+	}
+
+	if len(blocks) > 0 {
 		err = post.PostMessage(callback, blocks, Ephemeral)
 	}
 	return err

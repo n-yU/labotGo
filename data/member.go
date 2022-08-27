@@ -59,6 +59,16 @@ func (md MembersData) GetAllUserIDs() (userIDs []string) {
 	return userIDs
 }
 
+// 全編集可能メンバーリスト 取得
+func (md MembersData) GetAllEditedUserIDs() (userIDs []string) {
+	for _, uID := range md.GetAllUserIDs() {
+		if uID != MasterUserID {
+			userIDs = append(userIDs, uID)
+		}
+	}
+	return userIDs
+}
+
 // メンバーデータエラー
 func (md MembersData) GetErrBlocks(err error, dataErrType string) []slack.Block {
 	var text string
@@ -92,6 +102,6 @@ func (md MembersData) SynchronizeTeam() (err error) {
 		}
 	}
 
-	err = md.Update()
+	err = td.Update()
 	return err
 }

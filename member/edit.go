@@ -12,31 +12,23 @@ import (
 	"github.com/slack-go/slack"
 )
 
-// メンバー編集リクエスト（ユーザ選択）
+// メンバー編集リクエスト（メンバー選択）
 func getBlockEditMemberSelect() (blocks []slack.Block) {
 	if md, err := data.LoadMember(); err != nil {
 		blocks = md.GetErrBlocks(err, DataLoadErr)
 	} else {
-		// ヘッダー
+		// ブロック: ヘッダー
 		headerText := post.InfoText("*編集したいメンバーを選択してください*")
 		headerSection := post.SingleTextSectionBlock(Markdown, headerText)
 
-		// ヘッダー Tips
+		// ブロック: ヘッダー Tips
 		headerTipsText := []string{fmt.Sprintf("メンバーを追加する場合は `%s member add` を実行してください", Cmd)}
 		headerTipsSection := post.TipsSection(headerTipsText)
 
-		// メンバー選択
-		memberSelectOptionText := post.TxtBlockObj(PlainText, "メンバーを選択")
-		memberOption := post.OptionBlockObjectList(md.GetAllUserIDs(), true)
-		memberSelectOption := slack.NewOptionsSelectBlockElement(
-			slack.OptTypeStatic, memberSelectOptionText, aid.EditMemberSelectMember, memberOption...,
-		)
-		memberSelectText := post.TxtBlockObj(Markdown, "*メンバー*")
-		memberSelectSection := slack.NewSectionBlock(memberSelectText, nil, slack.NewAccessory(memberSelectOption))
+		// ブロック: メンバー選択
+		memberSelectSection := post.SelectMembersSection(md.GetAllEditedUserIDs(), aid.EditMemberSelectMember, []string{}, false, true)
 
-		blocks = []slack.Block{
-			headerSection, headerTipsSection, Divider(), memberSelectSection,
-		}
+		blocks = []slack.Block{headerSection, headerTipsSection, Divider(), memberSelectSection}
 	}
 	return blocks
 }
@@ -72,7 +64,7 @@ func getBlockEditTeamsSelect(blockActions map[string]map[string]slack.BlockActio
 	Logger.Printf("ユーザID: %s / 変更前チームリスト: %v\n", userID, memberTeamNames)
 
 	// ブロック: ヘッダー
-	headerText := post.InfoText(fmt.Sprintf("*指定したメンバー <@%s> のチームを選択してください*\n", userID))
+	headerText := post.InfoText(fmt.Sprintf("*指定したメンバー <@%s> のチームを選択してください*", userID))
 	headerSection := post.SingleTextSectionBlock(Markdown, headerText)
 	// ブロック: ヘッダー Tips
 	headerTipsText := []string{"`all` は全メンバーが入るチームのため削除できません"}

@@ -130,11 +130,23 @@ func main() {
 		Logger.Println("初回起動のため，以下のデータファイルを生成しました")
 		Logger.Printf("- メンバーデータ: %s\n", MemberDataPath)
 		Logger.Printf("- チームデータ  : %s\n", TeamDataPath)
+	} else {
+		if err != nil {
+			Logger.Println("データファイルの復元時に以下のエラーが発生しました")
+			Logger.Fatal(err)
+		}
 	}
 	Logger.Println("Tips: ボットが正常に動作しなくなる恐れがあるため，メンバー／チームデータは直接編集しないでください")
 
 	// 全ユーザIDリスト 取得
 	AllUserIDs = data.GetAllUserIDs(DeveloperMode)
+
+	// マスタユーザID（labotGo ユーザID）取得
+	response, err := SocketModeClient.AuthTest()
+	if err != nil {
+		log.Fatal(err)
+	}
+	MasterUserID = response.UserID
 
 	// Socket Mode
 	SocketModeClient.Run()
@@ -148,6 +160,24 @@ func checkFirstRun() (isFirstRun bool, err error) {
 		return isFirstRun, err
 	}
 
+	// 一方のデータファイルしか存在しない場合，もう一方のデータファイルを復元
+	if isMemberData {
+		if md, err := data.LoadMember(); err != nil {
+			return isFirstRun, err
+		} else {
+			Logger.Println("チームデータファイルが存在しないため，メンバーデータから復元します")
+			return isFirstRun, md.SynchronizeTeam()
+		}
+	}
+	if isTeamData {
+		if td, err := data.LoadTeam(); err != nil {
+			return isFirstRun, err
+		} else {
+			Logger.Println("メンバーデータファイルが存在しないため，チームデータから復元します")
+			return isFirstRun, td.SynchronizeMember()
+		}
+	}
+
 	// データファイル 生成
 	isFirstRun = true
 	if _, err := os.Create(MemberDataPath); err != nil {
@@ -156,13 +186,6 @@ func checkFirstRun() (isFirstRun bool, err error) {
 	if _, err := os.Create(TeamDataPath); err != nil {
 		return isFirstRun, err
 	}
-
-	// マスタユーザID（labotGo ユーザID）取得
-	response, err := SocketModeClient.AuthTest()
-	if err != nil {
-		log.Fatal(err)
-	}
-	MasterUserID = response.UserID
 
 	// メンバーデータ 初期設定
 	md := data.MembersData{MasterUserID: &data.MemberData{TeamNames: []string{MasterTeamName}}}

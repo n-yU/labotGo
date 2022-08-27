@@ -18,18 +18,18 @@ func getBlockEditTeamSelect() (blocks []slack.Block) {
 	if td, err := data.LoadTeam(); err != nil {
 		blocks = td.GetErrBlocks(err, DataLoadErr)
 	} else {
-		// ヘッダー
+		// ブロック: ヘッダー
 		headerText := post.InfoText("*編集したいチームを選択してください*")
 		headerSection := post.SingleTextSectionBlock(Markdown, headerText)
 
-		// ヘッダー Tips
+		// ブロック: ヘッダー Tips
 		headerTipsText := []string{
 			fmt.Sprintf("チームを追加する場合は `%s team add` を実行してください", Cmd),
 			"チーム `all` の編集・削除はできません",
 		}
 		headerTipsSection := post.TipsSection(headerTipsText)
 
-		// チーム選択
+		// ブロック: チーム選択
 		teamSelectOptionText := post.TxtBlockObj(PlainText, "チームを選択")
 		teamOption := post.OptionBlockObjectList(td.GetAllEditedNames(), false)
 		teamSelectOption := slack.NewOptionsSelectBlockElement(
@@ -78,7 +78,7 @@ func getBlockEditTeamInfo(blockActions map[string]map[string]slack.BlockAction) 
 	Logger.Printf("チーム名: %s / 変更前メンバーリスト: %v\n", teamName, teamUserIDs)
 
 	// ブロック: ヘッダー
-	headerText := post.InfoText(fmt.Sprintf("*指定したチーム `%s` の情報を編集してください*\n", teamName))
+	headerText := post.InfoText(fmt.Sprintf("*指定したチーム `%s` の情報を編集してください*", teamName))
 	headerSection := post.SingleTextSectionBlock(Markdown, headerText)
 	// ブロック: ヘッダー Tips
 	headerTipsText := []string{fmt.Sprintf("既存のチーム名への変更はできません（ `%s team list` で確認可能）", Cmd)}
@@ -86,12 +86,12 @@ func getBlockEditTeamInfo(blockActions map[string]map[string]slack.BlockAction) 
 	// ブロック: チーム名入力
 	nameSection := post.InputTeamNameSection(aid.EditTeamInputName, teamName)
 	// ブロック: 所属メンバー選択
-	memberSection := post.SelectMembersSection(md.GetAllUserIDs(), aid.EditTeamSelectMembers, teamUserIDs)
+	membersSection := post.SelectMembersSection(md.GetAllEditedUserIDs(), aid.EditTeamSelectMembers, teamUserIDs, true, true)
 	// ブロック: 変更ボタン
 	actionBtnActionId := strings.Join([]string{aid.EditTeam, teamName}, "_")
 	actionBtnBlock := post.BtnOK("変更", actionBtnActionId)
 
-	blocks = []slack.Block{headerSection, headerTipsSection, Divider(), nameSection, memberSection, actionBtnBlock}
+	blocks = []slack.Block{headerSection, headerTipsSection, Divider(), nameSection, membersSection, actionBtnBlock}
 	return blocks
 }
 
@@ -128,12 +128,12 @@ func EditTeam(blockActions map[string]map[string]slack.BlockAction, oldTeamName 
 		if newTeamName == "" {
 			blocks = post.SingleTextBlock(post.ErrText("チーム名が入力されていません"))
 		} else if idx := strings.Index(newTeamName, " "); idx >= 0 {
-			text := post.ErrText(fmt.Sprintf("チーム名にスペースを含めることはできません（%d文字目）\n", idx+1))
+			text := post.ErrText(fmt.Sprintf("チーム名にスペースを含めることはできません（%d文字目）", idx+1))
 			blocks = post.SingleTextBlock(text)
 		} else if newTeamName != oldTeamName && ListContains(td.GetAllNames(), newTeamName) {
-			headerText := post.ErrText(fmt.Sprintf("新しいチーム名 `%s` は既に存在するため変更できません\n", newTeamName))
+			headerText := post.ErrText(fmt.Sprintf("新しいチーム名 `%s` は既に存在するため変更できません", newTeamName))
 			headerSection := post.SingleTextSectionBlock(Markdown, headerText)
-			tipsText := []string{fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください\n", Cmd)}
+			tipsText := []string{fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください", Cmd)}
 			tipsSection := post.TipsSection(tipsText)
 			blocks = []slack.Block{headerSection, tipsSection}
 		} else {

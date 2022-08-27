@@ -27,7 +27,7 @@ func InfoText(text string) string {
 // 頻用テキスト: データファイルエラー Tips
 func TipsDataError(dataPath string) []string {
 	return []string{
-		fmt.Sprintf("データファイル `%s` が存在しないか，ファイル／データ形式が不適切です\n", dataPath),
+		fmt.Sprintf("データファイル `%s` が存在しないか，ファイル／データ形式が不適切です", dataPath),
 		"データファイルを削除した上で，botを再起動すると解消されます（但しデータはリセットされます）",
 	}
 }
@@ -94,14 +94,26 @@ func BtnOK(text string, actionID string) *slack.ActionBlock {
 }
 
 // 頻用セクション: メンバー選択
-func SelectMembersSection(userIDs []string, actionID string, initUserIDs []string) *slack.SectionBlock {
+func SelectMembersSection(userIDs []string, actionID string, initUserIDs []string, isMulti, isMember bool) *slack.SectionBlock {
+	var selectOptionType, text string
+	if isMulti {
+		selectOptionType = slack.MultiOptTypeStatic
+	} else {
+		selectOptionType = slack.OptTypeStatic
+	}
+	if isMember {
+		text = "メンバー"
+	} else {
+		text = "ユーザ"
+	}
+
 	options, initOptions := OptionBlockObjectList(userIDs, true), OptionBlockObjectList(initUserIDs, true)
-	selectOptionText := TxtBlockObj(PlainText, "メンバーを選択")
+	selectOptionText := TxtBlockObj(PlainText, fmt.Sprintf("%sを選択", text))
 	selectOption := &slack.MultiSelectBlockElement{
-		Type: slack.MultiOptTypeStatic, Placeholder: selectOptionText, ActionID: actionID,
+		Type: selectOptionType, Placeholder: selectOptionText, ActionID: actionID,
 		Options: options, InitialOptions: initOptions,
 	}
-	selectText := TxtBlockObj(Markdown, "*メンバー*")
+	selectText := TxtBlockObj(Markdown, fmt.Sprintf("*%s*", text))
 	selectSection := slack.NewSectionBlock(selectText, nil, slack.NewAccessory(selectOption))
 	return selectSection
 }

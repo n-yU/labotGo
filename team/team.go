@@ -23,7 +23,7 @@ func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, o
 	case "list":
 
 	default:
-		text := post.ErrText(fmt.Sprintf("コマンド %s team *%s* を使用することはできません\n", Cmd, subType))
+		text := post.ErrText(fmt.Sprintf("コマンド %s team *%s* を使用することはできません", Cmd, subType))
 		blocks, responseType, ok = post.SingleTextBlock(text), Ephemeral, false
 	}
 

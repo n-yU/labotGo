@@ -40,14 +40,12 @@ func getBlockAdd() (blocks []slack.Block) {
 	nameSection := post.InputTeamNameSection(aid.AddTeamInputName, "")
 
 	// ブロック: 所属メンバー選択
-	memberSection := post.SelectMembersSection(md.GetAllUserIDs(), aid.AddTeamSelectMembers, []string{})
+	membersSection := post.SelectMembersSection(md.GetAllEditedUserIDs(), aid.AddTeamSelectMembers, []string{}, true, true)
 
 	// ブロック: 追加ボタン
 	actionBtnBlock := post.BtnOK("追加", aid.AddTeam)
 
-	blocks = []slack.Block{
-		headerSection, headerTipsSection, Divider(), nameSection, memberSection, actionBtnBlock,
-	}
+	blocks = []slack.Block{headerSection, headerTipsSection, Divider(), nameSection, membersSection, actionBtnBlock}
 	return blocks
 }
 
@@ -84,12 +82,12 @@ func AddMember(blockActions map[string]map[string]slack.BlockAction) (blocks []s
 		if teamName == "" {
 			blocks = post.SingleTextBlock(post.ErrText("チーム名が入力されていません"))
 		} else if idx := strings.Index(teamName, " "); idx >= 0 {
-			text := post.ErrText(fmt.Sprintf("チーム名にスペースを含めることはできません（%d文字目）\n", idx+1))
+			text := post.ErrText(fmt.Sprintf("チーム名にスペースを含めることはできません（%d文字目）", idx+1))
 			blocks = post.SingleTextBlock(text)
 		} else if ListContains(td.GetAllNames(), teamName) {
-			headerText := post.ErrText(fmt.Sprintf("指定したチーム名 `%s` は既に存在するため追加できません\n", teamName))
+			headerText := post.ErrText(fmt.Sprintf("指定したチーム名 `%s` は既に存在するため追加できません", teamName))
 			headerSection := post.SingleTextSectionBlock(Markdown, headerText)
-			tipsText := []string{fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください\n", Cmd)}
+			tipsText := []string{fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください", Cmd)}
 			tipsSection := post.TipsSection(tipsText)
 			blocks = []slack.Block{headerSection, tipsSection}
 		} else if ListContains(userIDs, MasterUserID) {
