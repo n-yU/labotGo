@@ -12,8 +12,8 @@ import (
 	"github.com/slack-go/slack"
 )
 
-// Block Kit: メンバー追加リクエスト
-func getBlockAdd() (blocks []slack.Block) {
+// メンバー追加リクエスト
+func getBlockAdd() []slack.Block {
 	var (
 		memberData map[string][]string
 		teamData   map[string][]string
@@ -22,12 +22,10 @@ func getBlockAdd() (blocks []slack.Block) {
 
 	// メンバー・チームデータ 読み込み
 	if memberData, err = data.LoadMember(); err != nil {
-		blocks = data.GetMemberErrBlocks(err, DataLoadErr)
-		return blocks
+		return data.GetMemberErrBlocks(err, DataLoadErr)
 	}
 	if teamData, err = data.LoadTeam(); err != nil {
-		blocks = data.GetTeamErrBlocks(err, DataLoadErr)
-		return blocks
+		return data.GetTeamErrBlocks(err, DataLoadErr)
 	}
 
 	// ブロック: ヘッダー
@@ -44,7 +42,7 @@ func getBlockAdd() (blocks []slack.Block) {
 
 	// ブロック: ユーザ選択
 	userSelectOptionText := post.TxtBlockObj(PlainText, "ユーザを選択")
-	userOption := post.CreateOptionBlockObject(data.GetAllNonMembers(memberData), true)
+	userOption := post.OptionBlockObjectList(data.GetAllNonMembers(memberData), true)
 	userSelectOption := slack.NewOptionsSelectBlockElement(
 		slack.OptTypeStatic, userSelectOptionText, aid.AddMemberSelectUser, userOption...,
 	)
@@ -57,7 +55,7 @@ func getBlockAdd() (blocks []slack.Block) {
 	// ブロック: 追加ボタン
 	actionBtnBlock := post.BtnOK("追加", aid.AddMember)
 
-	blocks = []slack.Block{
+	blocks := []slack.Block{
 		headerSection, headerTipsSection, Divider(), userSelectSection, teamsSelectSection, actionBtnBlock,
 	}
 	return blocks

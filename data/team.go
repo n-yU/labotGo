@@ -47,6 +47,17 @@ func GetAllTeams(data map[string][]string) []string {
 	return teams
 }
 
+// 全編集可能チームリスト 取得
+func GetAllEditedTeams(data map[string][]string) (teams []string) {
+	for _, teamName := range GetAllTeams(data) {
+		if teamName != "all" {
+			teams = append(teams, teamName)
+		}
+	}
+	Logger.Println(teams)
+	return teams
+}
+
 // Block Kit: チームデータエラー
 func GetTeamErrBlocks(err error, dataErrType string) []slack.Block {
 	var text string

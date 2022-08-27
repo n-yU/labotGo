@@ -12,7 +12,7 @@ import (
 	"github.com/slack-go/slack"
 )
 
-// Block Kit: メンバー編集リクエスト（ユーザ選択）
+// メンバー編集リクエスト（ユーザ選択）
 func getBlockEditMemberSelect() (blocks []slack.Block) {
 	if memberData, err := data.LoadMember(); err != nil {
 		blocks = data.GetMemberErrBlocks(err, DataLoadErr)
@@ -26,11 +26,10 @@ func getBlockEditMemberSelect() (blocks []slack.Block) {
 		headerTipsSection := post.TipsSection(headerTipsText)
 
 		// メンバー選択
-		members := data.GetAllMembers(memberData)
 		memberSelectOptionText := post.TxtBlockObj(PlainText, "メンバーを選択")
-		memberOptions := post.CreateOptionBlockObject(members, true)
+		memberOption := post.OptionBlockObjectList(data.GetAllMembers(memberData), true)
 		memberSelectOption := slack.NewOptionsSelectBlockElement(
-			slack.OptTypeStatic, memberSelectOptionText, aid.EditMemberSelectMember, memberOptions...,
+			slack.OptTypeStatic, memberSelectOptionText, aid.EditMemberSelectMember, memberOption...,
 		)
 		memberSelectText := post.TxtBlockObj(Markdown, "*メンバー*")
 		memberSelectSection := slack.NewSectionBlock(memberSelectText, nil, slack.NewAccessory(memberSelectOption))
@@ -42,8 +41,8 @@ func getBlockEditMemberSelect() (blocks []slack.Block) {
 	return blocks
 }
 
-// Block Kit: メンバー編集リクエスト（チーム選択）
-func getBlockEditTeamsSelect(blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
+// メンバー編集リクエスト（チーム選択）
+func getBlockEditTeamsSelect(blockActions map[string]map[string]slack.BlockAction) []slack.Block {
 	var (
 		memberData map[string][]string
 		teamData   map[string][]string
@@ -53,12 +52,10 @@ func getBlockEditTeamsSelect(blockActions map[string]map[string]slack.BlockActio
 
 	// メンバー・チームデータ 読み込み
 	if memberData, err = data.LoadMember(); err != nil {
-		blocks = data.GetMemberErrBlocks(err, DataLoadErr)
-		return blocks
+		return data.GetMemberErrBlocks(err, DataLoadErr)
 	}
 	if teamData, err = data.LoadTeam(); err != nil {
-		blocks = data.GetTeamErrBlocks(err, DataLoadErr)
-		return blocks
+		return data.GetTeamErrBlocks(err, DataLoadErr)
 	}
 
 	// ユーザID・変更前チームリスト 取得
@@ -78,7 +75,7 @@ func getBlockEditTeamsSelect(blockActions map[string]map[string]slack.BlockActio
 	headerText := post.InfoText(fmt.Sprintf("*指定したメンバー <@%s> のチームを選択してください*\n", userID))
 	headerSection := post.SingleTextSectionBlock(Markdown, headerText)
 	// ブロック: ヘッダー Tips
-	headerTipsText := []string{"`all` は全メンバーが入るチームのため，削除するとエラーになります"}
+	headerTipsText := []string{"`all` は全メンバーが入るチームのため削除できません"}
 	headerTipsSection := post.TipsSection(headerTipsText)
 	// ブロック: チーム選択
 	teamSelectSection := post.SelectTeamsSection(data.GetAllTeams(teamData), aid.EditMemberSelectTeams, memberTeams)
@@ -86,9 +83,7 @@ func getBlockEditTeamsSelect(blockActions map[string]map[string]slack.BlockActio
 	actionBtnActionId := strings.Join([]string{aid.EditMember, userID}, "_")
 	actionBtnBlock := post.BtnOK("変更", actionBtnActionId)
 
-	blocks = []slack.Block{
-		headerSection, headerTipsSection, Divider(), teamSelectSection, actionBtnBlock,
-	}
+	blocks := []slack.Block{headerSection, headerTipsSection, Divider(), teamSelectSection, actionBtnBlock}
 	return blocks
 }
 

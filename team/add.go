@@ -12,7 +12,7 @@ import (
 	"github.com/slack-go/slack"
 )
 
-// Block Kit: チーム追加リクエスト
+// チーム追加リクエスト
 func getBlockAdd() (blocks []slack.Block) {
 	var (
 		memberData map[string][]string
@@ -37,12 +37,7 @@ func getBlockAdd() (blocks []slack.Block) {
 	headerTipsSection := post.TipsSection(headerTipsText)
 
 	// ブロック: チーム名入力
-	nameText := post.TxtBlockObj(PlainText, "チーム名")
-	nameHint := post.TxtBlockObj(PlainText, "1〜20文字で入力してください ／ スペースは使用できません")
-	nameInputText := post.TxtBlockObj(PlainText, "チーム名を入力")
-	nameInput := slack.NewPlainTextInputBlockElement(nameInputText, aid.AddTeamInputName)
-	nameInput.MinLength, nameInput.MaxLength = 1, 20
-	nameSection := slack.NewInputBlock("", nameText, nameHint, nameInput)
+	nameSection := post.InputTeamNameSection(aid.AddTeamInputName, "")
 
 	// ブロック: 所属メンバー選択
 	memberSection := post.SelectMembersSection(data.GetAllMembers(memberData), aid.AddTeamSelectMembers, []string{})
@@ -109,18 +104,9 @@ func AddMember(blockActions map[string]map[string]slack.BlockAction) (blocks []s
 				if err := data.SynchronizeMember(teamData); err != nil {
 					blocks = post.SingleTextBlock(post.ErrText(ErrorSynchronizeData))
 				} else {
-					var teamInfoMembers *slack.TextBlockObject
 					headerText := post.ScsText("*以下チームの追加に成功しました*")
 					headerSection := post.SingleTextSectionBlock(Markdown, headerText)
-					teamInfoName := post.TxtBlockObj(Markdown, fmt.Sprintf("*チーム名*:\n%s", teamName))
-					if len(members) > 0 {
-						teamInfoMembers = post.TxtBlockObj(Markdown, fmt.Sprintf("*メンバー*:\n<@%s>", strings.Join(members, ">, <@")))
-					} else {
-						teamInfoMembers = post.TxtBlockObj(Markdown, "*メンバー*:\n所属メンバーなし")
-					}
-					teamInfoField := []*slack.TextBlockObject{teamInfoName, teamInfoMembers}
-					teamInfoSection := slack.NewSectionBlock(nil, teamInfoField, nil)
-
+					teamInfoSection := post.InfoTeamSection(teamName, "", members, []string{})
 					tipsText := []string{"続けてチームを追加したい場合，同じフォームを再利用できます"}
 					tipsSection := post.TipsSection(tipsText)
 					blocks, ok = []slack.Block{headerSection, teamInfoSection, tipsSection}, true

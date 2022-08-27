@@ -17,6 +17,7 @@ const (
 	AddTeamInputName      = "TeamAddTeamInputName"
 	AddTeamSelectMembers  = "TeamAddTeamSelectMembers"
 	EditTeam              = "TeamEditTeam"
+	EditTeamSelectName    = "TeamEditTeamSelectName"
 	EditTeamInputName     = "TeamEditTeamInputName"
 	EditTeamSelectMembers = "TeamEditTeamSelectMembers"
 )
