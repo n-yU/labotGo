@@ -94,8 +94,8 @@ func BtnOK(text string, actionID string) *slack.ActionBlock {
 }
 
 // 頻用セクション: メンバー選択
-func SelectMembersSection(members []string, actionID string, initMembers []string) *slack.SectionBlock {
-	options, initOptions := OptionBlockObjectList(members, true), OptionBlockObjectList(initMembers, true)
+func SelectMembersSection(userIDs []string, actionID string, initUserIDs []string) *slack.SectionBlock {
+	options, initOptions := OptionBlockObjectList(userIDs, true), OptionBlockObjectList(initUserIDs, true)
 	selectOptionText := TxtBlockObj(PlainText, "メンバーを選択")
 	selectOption := &slack.MultiSelectBlockElement{
 		Type: slack.MultiOptTypeStatic, Placeholder: selectOptionText, ActionID: actionID,
@@ -107,8 +107,8 @@ func SelectMembersSection(members []string, actionID string, initMembers []strin
 }
 
 // 頻用セクション: チーム選択
-func SelectTeamsSection(teams []string, actionID string, initTeams []string) *slack.SectionBlock {
-	options, initOptions := OptionBlockObjectList(teams, false), OptionBlockObjectList(initTeams, false)
+func SelectTeamsSection(teamNames []string, actionID string, initTeamNames []string) *slack.SectionBlock {
+	options, initOptions := OptionBlockObjectList(teamNames, false), OptionBlockObjectList(initTeamNames, false)
 	selectOptionText := TxtBlockObj(PlainText, "チームを選択")
 	selectOption := &slack.MultiSelectBlockElement{
 		Type: slack.MultiOptTypeStatic, Placeholder: selectOptionText, ActionID: actionID,
@@ -120,30 +120,43 @@ func SelectTeamsSection(teams []string, actionID string, initTeams []string) *sl
 }
 
 // 頻用セクション: メンバー情報
-func InfoMemberSection(userID string, teams []string) *slack.SectionBlock {
-	infoUserId := TxtBlockObj(Markdown, fmt.Sprintf("*ユーザ*:\n<@%s>", userID))
-	infoTeams := TxtBlockObj(Markdown, fmt.Sprintf("*チーム*:\n%s", strings.Join(teams, ", ")))
-	infoField := []*slack.TextBlockObject{infoUserId, infoTeams}
+func InfoMemberSection(userID string, newTeamNames, oldTeamNames []string) *slack.SectionBlock {
+	var infoTeams *slack.TextBlockObject
+	infoUserID := TxtBlockObj(Markdown, fmt.Sprintf("*ユーザ*:\n<@%s>", userID))
+
+	infoTeamsTextList := []string{}
+	for _, teamName := range UniqueConcatSlice(oldTeamNames, newTeamNames) {
+		var teamNameText string
+		if isOld, isNew := ListContains(oldTeamNames, teamName), ListContains(newTeamNames, teamName); isOld && isNew {
+			teamNameText = teamName
+		} else if isOld {
+			teamNameText = fmt.Sprintf("~%s~", teamName)
+		} else if isNew {
+			teamNameText = fmt.Sprintf("*%s*", teamName)
+		}
+		infoTeamsTextList = append(infoTeamsTextList, teamNameText)
+	}
+	infoTeams = TxtBlockObj(Markdown, fmt.Sprintf("*チーム*:\n%s", strings.Join(infoTeamsTextList, ", ")))
+
+	infoField := []*slack.TextBlockObject{infoUserID, infoTeams}
 	infoSection := slack.NewSectionBlock(nil, infoField, nil)
 	return infoSection
 }
 
 // 頻用セクション: チーム情報
-func InfoTeamSection(newTeamName, oldTeamName string, newMembers, oldMembers []string) *slack.SectionBlock {
+func InfoTeamSection(newTeamName, oldTeamName string, newUserIDs, oldUserIDs []string) *slack.SectionBlock {
 	var infoName, infoMembers *slack.TextBlockObject
-	Logger.Println(newTeamName, oldTeamName, newMembers, oldMembers)
 
 	if oldTeamName == newTeamName {
 		infoName = TxtBlockObj(Markdown, fmt.Sprintf("*チーム名*:\n%s", newTeamName))
 	} else {
-		infoName = TxtBlockObj(Markdown, fmt.Sprintf("*チーム名*:\n~%s~ → *%s*", newTeamName, newTeamName))
+		infoName = TxtBlockObj(Markdown, fmt.Sprintf("*チーム名*:\n~%s~ → *%s*", oldTeamName, newTeamName))
 	}
-	if len(oldMembers)+len(newMembers) > 0 {
+	if len(oldUserIDs)+len(newUserIDs) > 0 {
 		infoMembersTextList := []string{}
-		for _, userID := range UniqueConcatSlice(oldMembers, newMembers) {
+		for _, userID := range UniqueConcatSlice(oldUserIDs, newUserIDs) {
 			var userIDText string
-			isOld, isNew := ListContains(oldMembers, userID), ListContains(newMembers, userID)
-			if isOld && isNew {
+			if isOld, isNew := ListContains(oldUserIDs, userID), ListContains(newUserIDs, userID); isOld && isNew {
 				userIDText = fmt.Sprintf("<@%s>", userID)
 			} else if isOld {
 				userIDText = fmt.Sprintf("~<@%s>~", userID)

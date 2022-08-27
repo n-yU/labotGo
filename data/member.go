@@ -11,29 +11,38 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// メンバー
+type MemberData struct {
+	TeamNames []string `yaml:"teams"`
+	Image     string   `yaml:"image"`
+}
+
+// メンバーリスト
+type MembersData map[string]*MemberData
+
 // メンバーデータ 読み込み
-func LoadMember() (data map[string][]string, err error) {
+func LoadMember() (md MembersData, err error) {
 	f, err := os.Open(MemberDataPath)
 	if err != nil {
-		return data, err
+		return md, err
 	}
 	bs, err := ioutil.ReadAll(f)
 	if err != nil {
-		return data, err
+		return md, err
 	}
 
 	if len(bs) > 0 {
-		err = yaml.Unmarshal([]byte(bs), &data)
+		err = yaml.Unmarshal([]byte(bs), &md)
 	} else {
-		data = map[string][]string{}
+		Logger.Fatalf("メンバーデータ \"%s\"が存在しません\n", MemberDataPath)
 	}
 
-	return data, err
+	return md, err
 }
 
 // メンバーデータ 更新
-func UpdateMember(data map[string][]string) (err error) {
-	bs, err := yaml.Marshal(&data)
+func (md MembersData) Update() (err error) {
+	bs, err := yaml.Marshal(&md)
 	if err != nil {
 		return err
 	}
@@ -43,16 +52,15 @@ func UpdateMember(data map[string][]string) (err error) {
 }
 
 // 全メンバーリスト 取得
-func GetAllMembers(data map[string][]string) []string {
-	members := []string{}
-	for userId := range data {
-		members = append(members, userId)
+func (md MembersData) GetAllUserIDs() (userIDs []string) {
+	for uID := range md {
+		userIDs = append(userIDs, uID)
 	}
-	return members
+	return userIDs
 }
 
-// Block Kit: メンバーデータエラー
-func GetMemberErrBlocks(err error, dataErrType string) []slack.Block {
+// メンバーデータエラー
+func (md MembersData) GetErrBlocks(err error, dataErrType string) []slack.Block {
 	var text string
 	switch dataErrType {
 	case DataLoadErr:
@@ -73,17 +81,17 @@ func GetMemberErrBlocks(err error, dataErrType string) []slack.Block {
 }
 
 // メンバーデータによるチームデータの同期
-func SynchronizeTeam(memberData map[string][]string) (err error) {
-	teamData := map[string][]string{}
-	for userID, teams := range memberData {
-		for _, teamName := range teams {
-			if _, ok := teamData[teamName]; !ok {
-				teamData[teamName] = []string{}
+func (md MembersData) SynchronizeTeam() (err error) {
+	td := TeamsData{}
+	for userID, member := range md {
+		for _, teamName := range member.TeamNames {
+			if _, ok := td[teamName]; !ok {
+				td[teamName] = new(TeamData)
 			}
-			teamData[teamName] = append(teamData[teamName], userID)
+			td[teamName].UserIDs = append(td[teamName].UserIDs, userID)
 		}
 	}
 
-	err = UpdateTeam(teamData)
+	err = md.Update()
 	return err
 }

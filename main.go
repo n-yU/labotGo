@@ -157,21 +157,22 @@ func checkFirstRun() (isFirstRun bool, err error) {
 		return isFirstRun, err
 	}
 
-	// メンバーデータ 初期設定
-	memberData := map[string][]string{}
+	// マスタユーザID（labotGo ユーザID）取得
 	response, err := SocketModeClient.AuthTest()
 	if err != nil {
 		log.Fatal(err)
 	}
-	memberData[response.UserID] = []string{"all"}
-	if err := data.UpdateMember(memberData); err != nil {
+	MasterUserID = response.UserID
+
+	// メンバーデータ 初期設定
+	md := data.MembersData{MasterUserID: &data.MemberData{TeamNames: []string{MasterTeamName}}}
+	if err := md.Update(); err != nil {
 		Logger.Fatal(err)
 	}
 
 	// チームデータ 初期設定
-	teamData := map[string][]string{}
-	teamData["all"] = []string{response.UserID}
-	if err := data.UpdateTeam(teamData); err != nil {
+	td := data.TeamsData{MasterTeamName: &data.TeamData{UserIDs: []string{MasterUserID}}}
+	if err := td.Update(); err != nil {
 		Logger.Fatal(err)
 	}
 

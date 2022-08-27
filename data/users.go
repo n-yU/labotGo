@@ -34,8 +34,8 @@ func GetLimitedUserIDs(excludeUserIDs []string) (ids []string) {
 }
 
 // 非メンバー ユーザIDリスト 取得
-func GetAllNonMembers(memberData map[string][]string) []string {
-	return GetLimitedUserIDs(GetAllMembers(memberData))
+func GetAllNonMembers(md MembersData) []string {
+	return GetLimitedUserIDs(md.GetAllUserIDs())
 }
 
 // メンションフォーマットからのユーザID取得

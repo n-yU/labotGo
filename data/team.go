@@ -12,24 +12,32 @@ import (
 	"github.com/slack-go/slack"
 )
 
+// チーム
+type TeamData struct {
+	UserIDs []string `yaml:"members"`
+}
+
+// チームリスト
+type TeamsData map[string]*TeamData
+
 // チームデータ 読み込み
-func LoadTeam() (data map[string][]string, err error) {
+func LoadTeam() (td TeamsData, err error) {
 	f, err := os.Open(TeamDataPath)
 	if err != nil {
-		return data, err
+		return td, err
 	}
 	bs, err := ioutil.ReadAll(f)
 	if err != nil {
-		return data, err
+		return td, err
 	}
 
-	err = yaml.Unmarshal([]byte(bs), &data)
-	return data, err
+	err = yaml.Unmarshal([]byte(bs), &td)
+	return td, err
 }
 
 // チームデータ 更新
-func UpdateTeam(data map[string][]string) (err error) {
-	bs, err := yaml.Marshal(&data)
+func (td TeamsData) Update() (err error) {
+	bs, err := yaml.Marshal(&td)
 	if err != nil {
 		return err
 	}
@@ -39,27 +47,25 @@ func UpdateTeam(data map[string][]string) (err error) {
 }
 
 // 全チームリスト 取得
-func GetAllTeams(data map[string][]string) []string {
-	teams := []string{}
-	for t := range data {
-		teams = append(teams, t)
+func (td TeamsData) GetAllNames() (teamNames []string) {
+	for t := range td {
+		teamNames = append(teamNames, t)
 	}
-	return teams
+	return teamNames
 }
 
 // 全編集可能チームリスト 取得
-func GetAllEditedTeams(data map[string][]string) (teams []string) {
-	for _, teamName := range GetAllTeams(data) {
-		if teamName != "all" {
-			teams = append(teams, teamName)
+func (td TeamsData) GetAllEditedNames() (teamName []string) {
+	for _, t := range td.GetAllNames() {
+		if t != "all" {
+			teamName = append(teamName, t)
 		}
 	}
-	Logger.Println(teams)
-	return teams
+	return teamName
 }
 
-// Block Kit: チームデータエラー
-func GetTeamErrBlocks(err error, dataErrType string) []slack.Block {
+// チームデータエラー
+func (td TeamsData) GetErrBlocks(err error, dataErrType string) []slack.Block {
 	var text string
 	switch dataErrType {
 	case DataLoadErr:
@@ -80,17 +86,17 @@ func GetTeamErrBlocks(err error, dataErrType string) []slack.Block {
 }
 
 // チームデータによるメンバーデータの同期
-func SynchronizeMember(teamData map[string][]string) (err error) {
-	memberData := map[string][]string{}
-	for teamName, members := range teamData {
-		for _, userID := range members {
-			if _, ok := memberData[userID]; !ok {
-				memberData[userID] = []string{}
+func (td TeamsData) SynchronizeMember() (err error) {
+	md := MembersData{}
+	for teamName, team := range td {
+		for _, mID := range team.UserIDs {
+			if _, ok := md[mID]; !ok {
+				md[mID] = new(MemberData)
 			}
-			memberData[userID] = append(memberData[userID], teamName)
+			md[mID].TeamNames = append(md[mID].TeamNames, teamName)
 		}
 	}
 
-	err = UpdateMember(memberData)
+	err = md.Update()
 	return err
 }

@@ -2,6 +2,7 @@
 package util
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"reflect"
@@ -12,10 +13,11 @@ import (
 )
 
 const (
-	Version       = "1.0.0-alpha"
-	DebugMode     = false
-	DeveloperMode = true // botもメンバー追加を許可（デバッグ用）
-	Cmd           = "/lab"
+	Version        = "1.0.0-alpha"
+	DebugMode      = false
+	DeveloperMode  = true // botもメンバー追加を許可（デバッグ用）
+	Cmd            = "/lab"
+	MasterTeamName = "all"
 
 	InChannel = slack.ResponseTypeInChannel
 	Ephemeral = slack.ResponseTypeEphemeral
@@ -26,7 +28,7 @@ const (
 	TeamDataPath   = "/go/src/app/data/team.yml"
 
 	TipsMemberTeam       = "*labotGo* に追加されたユーザを `メンバー` とし， `メンバー` のグループを `チーム` と呼びます"
-	TipsTeamALL          = "チーム `all` は全メンバーが入るチームです．削除しないでください．"
+	TipsMasterTeam       = "チーム `all` は全メンバーが入るチームです．編集・削除などの各操作はできません．"
 	ErrorSynchronizeData = "メンバーデータとチームデータの同期に失敗しました"
 
 	DataLoadErr   = "dataLoadError"
@@ -37,7 +39,10 @@ var (
 	Logger           *log.Logger
 	Api              *slack.Client
 	SocketModeClient *socketmode.Client
-	AllUserIDs       []string
+
+	AllUserIDs     []string
+	MasterUserID   string
+	TipsMasterUser = fmt.Sprintf("ユーザ <@%s> はマスターメンバーです．編集・削除などの各操作はできません．", MasterUserID)
 )
 
 // 環境変数 読み込み
