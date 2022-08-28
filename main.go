@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/n-yU/labotGo/data"
@@ -19,6 +20,17 @@ import (
 // labotGo
 func main() {
 	Logger = log.New(os.Stdout, "[labotGo] ", log.Ldate|log.Ltime)
+
+	// 実行ファイルディレクトリ 取得
+	exePath, err := os.Executable()
+	if err != nil {
+		Logger.Println("実行ファイルディレクトリの取得に失敗しました")
+		Logger.Fatal(err)
+	}
+	Dir = filepath.Dir(exePath)
+	Logger.Println("実行ファイルディレクトリ:", Dir)
+
+	// 環境変数 読み込み
 	LoadEnv()
 
 	// トークン 確認
@@ -128,8 +140,8 @@ func main() {
 			Logger.Fatal(err)
 		}
 		Logger.Println("初回起動のため，以下のデータファイルを生成しました")
-		Logger.Printf("- メンバーデータ: %s\n", MemberDataPath)
-		Logger.Printf("- チームデータ  : %s\n", TeamDataPath)
+		Logger.Printf("- メンバーデータ: %s\n", MemberDataPath())
+		Logger.Printf("- チームデータ  : %s\n", TeamDataPath())
 	} else {
 		if err != nil {
 			Logger.Println("データファイルの復元時に以下のエラーが発生しました")
@@ -141,7 +153,7 @@ func main() {
 	// 全ユーザIDリスト 取得
 	AllUserIDs = data.GetAllUserIDs(DeveloperMode)
 
-	// マスタユーザID（labotGo ユーザID）取得
+	// マスタユーザID（labotGo ID）取得
 	response, err := SocketModeClient.AuthTest()
 	if err != nil {
 		log.Fatal(err)
@@ -155,7 +167,7 @@ func main() {
 // 初回起動チェック
 func checkFirstRun() (isFirstRun bool, err error) {
 	// データファイル存在 チェック
-	isMemberData, isTeamData := FileExists(MemberDataPath), FileExists(TeamDataPath)
+	isMemberData, isTeamData := FileExists(MemberDataPath()), FileExists(TeamDataPath())
 	if isMemberData && isTeamData {
 		return isFirstRun, err
 	}
@@ -178,12 +190,13 @@ func checkFirstRun() (isFirstRun bool, err error) {
 		}
 	}
 
+	// 以下，初回起動処理
 	// データファイル 生成
 	isFirstRun = true
-	if _, err := os.Create(MemberDataPath); err != nil {
+	if _, err := os.Create(MemberDataPath()); err != nil {
 		return isFirstRun, err
 	}
-	if _, err := os.Create(TeamDataPath); err != nil {
+	if _, err := os.Create(TeamDataPath()); err != nil {
 		return isFirstRun, err
 	}
 

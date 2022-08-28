@@ -16,6 +16,7 @@
 - [Goで型に縛られない良い感じのContains関数の書き方](https://zenn.dev/glassonion1/articles/7c7830a269909c)
 - [Go 言語でスライスから要素を消すには](https://zenn.dev/mattn/articles/31dfed3c89956d)
 - [【Go】スライスから重複を排除し、ユニークなスライスを作成する方法](https://zenn.dev/orangekame/articles/dad6d0e9382660)
+- [Go で実行ファイルのパスを取得 - Qiita](https://qiita.com/summer/items/2674a178ffe6acb895fb)
 
 ## slack-go
 - [slack-go/slack: Slack API in Go - community-maintained fork created by the original author, @nlopes](https://github.com/slack-go/slack)

@@ -91,7 +91,7 @@ func AddMember(blockActions map[string]map[string]slack.BlockAction) (blocks []s
 			tipsSection := post.TipsSection(tipsText)
 			blocks = []slack.Block{headerSection, tipsSection}
 		} else if ListContains(userIDs, MasterUserID) {
-			blocks = post.SingleTextBlock(post.ErrText(TipsMasterUser))
+			blocks = post.SingleTextBlock(post.ErrText(TipsMasterUser()))
 		} else {
 			// チームデータ更新
 			td[teamName] = &data.TeamData{UserIDs: userIDs}

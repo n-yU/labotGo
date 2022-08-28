@@ -22,7 +22,7 @@ type MembersData map[string]*MemberData
 
 // メンバーデータ 読み込み
 func LoadMember() (md MembersData, err error) {
-	f, err := os.Open(MemberDataPath)
+	f, err := os.Open(MemberDataPath())
 	if err != nil {
 		return md, err
 	}
@@ -34,7 +34,7 @@ func LoadMember() (md MembersData, err error) {
 	if len(bs) > 0 {
 		err = yaml.Unmarshal([]byte(bs), &md)
 	} else {
-		Logger.Fatalf("メンバーデータ \"%s\"が存在しません\n", MemberDataPath)
+		Logger.Fatalf("メンバーデータ \"%s\"が存在しません\n", MemberDataPath())
 	}
 
 	return md, err
@@ -47,7 +47,7 @@ func (md MembersData) Update() (err error) {
 		return err
 	}
 
-	err = ioutil.WriteFile(MemberDataPath, bs, os.ModePerm)
+	err = ioutil.WriteFile(MemberDataPath(), bs, os.ModePerm)
 	return err
 }
 
@@ -82,7 +82,7 @@ func (md MembersData) GetErrBlocks(err error, dataErrType string) []slack.Block 
 	}
 
 	headerSection := post.SingleTextSectionBlock(PlainText, post.ErrText(text))
-	tipsSection := post.TipsSection(post.TipsDataError(MemberDataPath))
+	tipsSection := post.TipsSection(post.TipsDataError(MemberDataPath()))
 	blocks := []slack.Block{headerSection, tipsSection}
 
 	Logger.Println(text)

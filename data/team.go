@@ -22,7 +22,7 @@ type TeamsData map[string]*TeamData
 
 // チームデータ 読み込み
 func LoadTeam() (td TeamsData, err error) {
-	f, err := os.Open(TeamDataPath)
+	f, err := os.Open(TeamDataPath())
 	if err != nil {
 		return td, err
 	}
@@ -42,7 +42,7 @@ func (td TeamsData) Update() (err error) {
 		return err
 	}
 
-	err = ioutil.WriteFile(TeamDataPath, bs, os.ModePerm)
+	err = ioutil.WriteFile(TeamDataPath(), bs, os.ModePerm)
 	return err
 }
 
@@ -77,7 +77,7 @@ func (td TeamsData) GetErrBlocks(err error, dataErrType string) []slack.Block {
 	}
 
 	headerSection := post.SingleTextSectionBlock(PlainText, post.ErrText(text))
-	tipsSection := post.TipsSection(post.TipsDataError(TeamDataPath))
+	tipsSection := post.TipsSection(post.TipsDataError(TeamDataPath()))
 	blocks := []slack.Block{headerSection, tipsSection}
 
 	Logger.Println(text)

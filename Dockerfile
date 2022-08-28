@@ -1,8 +1,5 @@
 FROM golang:1.19-alpine
 
-ARG GOOS=linux
-ARG GOARCH=amd64
-
 RUN mkdir /go/src/app
 WORKDIR /go/src/app
 ADD . /go/src/app

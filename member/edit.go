@@ -105,7 +105,7 @@ func EditMember(blockActions map[string]map[string]slack.BlockAction, userID str
 
 		// バリデーションチェック
 		if userID == MasterUserID {
-			blocks = post.SingleTextBlock(post.ErrText(TipsMasterUser))
+			blocks = post.SingleTextBlock(post.ErrText(TipsMasterUser()))
 		} else if len(newTeams) == 0 {
 			headerText := post.ErrText("所属チームは1つ以上選択してください")
 			headerSection := post.SingleTextSectionBlock(PlainText, headerText)

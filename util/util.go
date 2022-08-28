@@ -24,9 +24,6 @@ const (
 	Markdown  = slack.MarkdownType
 	PlainText = slack.PlainTextType
 
-	MemberDataPath = "/go/src/app/data/member.yml"
-	TeamDataPath   = "/go/src/app/data/team.yml"
-
 	TipsMemberTeam       = "*labotGo* に追加されたユーザを `メンバー` とし， `メンバー` のグループを `チーム` と呼びます"
 	TipsMasterTeam       = "チーム `all` は全メンバーが入るチームです．編集・削除などの各操作はできません．"
 	ErrorSynchronizeData = "メンバーデータとチームデータの同期に失敗しました"
@@ -40,24 +37,40 @@ var (
 	Api              *slack.Client
 	SocketModeClient *socketmode.Client
 
-	AllUserIDs     []string
-	MasterUserID   string
-	TipsMasterUser = fmt.Sprintf("ユーザ <@%s> はマスターメンバーです．編集・削除などの各操作はできません．", MasterUserID)
+	Dir          string   // 実行ファイルパスディレクトリ
+	AllUserIDs   []string // ワークスペース全ユーザID
+	MasterUserID string   // マスターユーザID（labotGo ID）
 )
+
+// getter: メンバーデータパス
+func MemberDataPath() string {
+	return fmt.Sprintf("%s/data/member.yml", Dir)
+}
+
+// getter: チームデータパス
+func TeamDataPath() string {
+	return fmt.Sprintf("%s/data/team.yml", Dir)
+}
+
+// getter: マスターユーザ Tips
+func TipsMasterUser() string {
+	return fmt.Sprintf("ユーザ <@%s> はマスターメンバーです．編集・削除などの各操作はできません．", MasterUserID)
+}
 
 // 環境変数 読み込み
 func LoadEnv() {
 	// ref.) https://zenn.dev/a_ichi1/articles/c9f3870350c5e2
-	if err := godotenv.Load(".env"); err != nil {
+	envPath := fmt.Sprintf("%s/.env", Dir)
+	if err := godotenv.Load(envPath); err != nil {
 		Logger.Println("環境変数の読み込みに失敗しました")
 		Logger.Fatal(err)
 	}
 }
 
 // ファイル存在 チェック
-func FileExists(filename string) bool {
+func FileExists(filePath string) bool {
 	// ref.) https://qiita.com/suin/items/b9c0f92851454dc6d461
-	_, err := os.Stat(filename)
+	_, err := os.Stat(filePath)
 	return err == nil
 }
 
