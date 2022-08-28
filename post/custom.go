@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/n-yU/labotGo/util"
+	"github.com/n-yU/labotGo/util"
 	"github.com/slack-go/slack"
 )
 
@@ -77,7 +77,7 @@ func SingleTextSectionBlock(elementType string, text string) *slack.SectionBlock
 func TipsSection(tips []string) *slack.ContextBlock {
 	elements := make([]slack.MixedElement, 0, len(tips))
 	for _, str := range tips {
-		textBlockObject := slack.NewTextBlockObject(Markdown, fmt.Sprintf(":bulb: %s", str), false, false)
+		textBlockObject := slack.NewTextBlockObject(util.Markdown, fmt.Sprintf(":bulb: %s", str), false, false)
 		elements = append(elements, textBlockObject)
 	}
 
@@ -87,7 +87,7 @@ func TipsSection(tips []string) *slack.ContextBlock {
 
 // 頻用セクション: OKボタン
 func BtnOK(text string, actionID string) *slack.ActionBlock {
-	btnText := TxtBlockObj(PlainText, text)
+	btnText := TxtBlockObj(util.PlainText, text)
 	btn := NewButtonBlockElementWithStyle(actionID, "", btnText, slack.StylePrimary)
 	btnBlock := slack.NewActionBlock("", btn)
 	return btnBlock
@@ -108,11 +108,11 @@ func SelectMembersSection(userIDs []string, actionID string, initUserIDs []strin
 	}
 
 	options, initOptions := OptionBlockObjectList(userIDs, true), OptionBlockObjectList(initUserIDs, true)
-	selectOptionText := TxtBlockObj(PlainText, fmt.Sprintf("%sを選択", text))
+	selectOptionText := TxtBlockObj(util.PlainText, fmt.Sprintf("%sを選択", text))
 	selectOption := &slack.MultiSelectBlockElement{
 		Type: selectOptionType, Placeholder: selectOptionText, ActionID: actionID, Options: options, InitialOptions: initOptions,
 	}
-	selectText := TxtBlockObj(Markdown, fmt.Sprintf("*%s*", text))
+	selectText := TxtBlockObj(util.Markdown, fmt.Sprintf("*%s*", text))
 	selectSection := slack.NewSectionBlock(selectText, nil, slack.NewAccessory(selectOption))
 	return selectSection
 }
@@ -127,11 +127,11 @@ func SelectTeamsSection(teamNames []string, actionID string, initTeamNames []str
 	}
 
 	options, initOptions := OptionBlockObjectList(teamNames, false), OptionBlockObjectList(initTeamNames, false)
-	selectOptionText := TxtBlockObj(PlainText, "チームを選択")
+	selectOptionText := TxtBlockObj(util.PlainText, "チームを選択")
 	selectOption := &slack.MultiSelectBlockElement{
 		Type: selectOptionType, Placeholder: selectOptionText, ActionID: actionID, Options: options, InitialOptions: initOptions,
 	}
-	selectText := TxtBlockObj(Markdown, "*チーム*")
+	selectText := TxtBlockObj(util.Markdown, "*チーム*")
 	selectSection := slack.NewSectionBlock(selectText, nil, slack.NewAccessory(selectOption))
 	return selectSection
 }
@@ -139,12 +139,12 @@ func SelectTeamsSection(teamNames []string, actionID string, initTeamNames []str
 // 頻用セクション: メンバー情報
 func InfoMemberSection(userID string, newTeamNames, oldTeamNames []string) *slack.SectionBlock {
 	var infoTeams *slack.TextBlockObject
-	infoUserID := TxtBlockObj(Markdown, fmt.Sprintf("*ユーザ*:\n<@%s>", userID))
+	infoUserID := TxtBlockObj(util.Markdown, fmt.Sprintf("*ユーザ*:\n<@%s>", userID))
 
 	infoTeamsTextList := []string{}
-	for _, teamName := range UniqueConcatSlice(oldTeamNames, newTeamNames) {
+	for _, teamName := range util.UniqueConcatSlice(oldTeamNames, newTeamNames) {
 		var teamNameText string
-		if isOld, isNew := ListContains(oldTeamNames, teamName), ListContains(newTeamNames, teamName); isOld && isNew {
+		if isOld, isNew := util.ListContains(oldTeamNames, teamName), util.ListContains(newTeamNames, teamName); isOld && isNew {
 			teamNameText = teamName
 		} else if isOld {
 			teamNameText = fmt.Sprintf("~%s~", teamName)
@@ -153,7 +153,7 @@ func InfoMemberSection(userID string, newTeamNames, oldTeamNames []string) *slac
 		}
 		infoTeamsTextList = append(infoTeamsTextList, teamNameText)
 	}
-	infoTeams = TxtBlockObj(Markdown, fmt.Sprintf("*チーム*:\n%s", strings.Join(infoTeamsTextList, ", ")))
+	infoTeams = TxtBlockObj(util.Markdown, fmt.Sprintf("*チーム*:\n%s", strings.Join(infoTeamsTextList, ", ")))
 
 	infoField := []*slack.TextBlockObject{infoUserID, infoTeams}
 	infoSection := slack.NewSectionBlock(nil, infoField, nil)
@@ -165,15 +165,15 @@ func InfoTeamSection(newTeamName, oldTeamName string, newUserIDs, oldUserIDs []s
 	var infoName, infoMembers *slack.TextBlockObject
 
 	if oldTeamName == newTeamName {
-		infoName = TxtBlockObj(Markdown, fmt.Sprintf("*チーム名*:\n%s", newTeamName))
+		infoName = TxtBlockObj(util.Markdown, fmt.Sprintf("*チーム名*:\n%s", newTeamName))
 	} else {
-		infoName = TxtBlockObj(Markdown, fmt.Sprintf("*チーム名*:\n~%s~ → *%s*", oldTeamName, newTeamName))
+		infoName = TxtBlockObj(util.Markdown, fmt.Sprintf("*チーム名*:\n~%s~ → *%s*", oldTeamName, newTeamName))
 	}
 	if len(oldUserIDs)+len(newUserIDs) > 0 {
 		infoMembersTextList := []string{}
-		for _, userID := range UniqueConcatSlice(oldUserIDs, newUserIDs) {
+		for _, userID := range util.UniqueConcatSlice(oldUserIDs, newUserIDs) {
 			var userIDText string
-			if isOld, isNew := ListContains(oldUserIDs, userID), ListContains(newUserIDs, userID); isOld && isNew {
+			if isOld, isNew := util.ListContains(oldUserIDs, userID), util.ListContains(newUserIDs, userID); isOld && isNew {
 				userIDText = fmt.Sprintf("<@%s>", userID)
 			} else if isOld {
 				userIDText = fmt.Sprintf("~<@%s>~", userID)
@@ -183,9 +183,9 @@ func InfoTeamSection(newTeamName, oldTeamName string, newUserIDs, oldUserIDs []s
 			}
 			infoMembersTextList = append(infoMembersTextList, userIDText)
 		}
-		infoMembers = TxtBlockObj(Markdown, fmt.Sprintf("*メンバー*:\n%s", strings.Join(infoMembersTextList, ", ")))
+		infoMembers = TxtBlockObj(util.Markdown, fmt.Sprintf("*メンバー*:\n%s", strings.Join(infoMembersTextList, ", ")))
 	} else {
-		infoMembers = TxtBlockObj(Markdown, "*メンバー*:\n所属メンバーなし")
+		infoMembers = TxtBlockObj(util.Markdown, "*メンバー*:\n所属メンバーなし")
 	}
 
 	infoField := []*slack.TextBlockObject{infoName, infoMembers}
@@ -195,9 +195,9 @@ func InfoTeamSection(newTeamName, oldTeamName string, newUserIDs, oldUserIDs []s
 
 // 頻用セクション: チーム名入力
 func InputTeamNameSection(actionID string, initTeamName string) *slack.InputBlock {
-	inputSectionText := TxtBlockObj(PlainText, "チーム名")
-	inputSectionHint := TxtBlockObj(PlainText, "1〜20文字で入力してください ／ スペースは使用できません")
-	inputText := TxtBlockObj(PlainText, "チーム名を入力")
+	inputSectionText := TxtBlockObj(util.PlainText, "チーム名")
+	inputSectionHint := TxtBlockObj(util.PlainText, "1〜20文字で入力してください ／ スペースは使用できません")
+	inputText := TxtBlockObj(util.PlainText, "チーム名を入力")
 	input := &slack.PlainTextInputBlockElement{
 		Type: slack.METPlainTextInput, ActionID: actionID, Placeholder: inputText, InitialValue: initTeamName,
 	}
@@ -208,6 +208,6 @@ func InputTeamNameSection(actionID string, initTeamName string) *slack.InputBloc
 
 // 頻用ブロック: シングルテキスト
 func SingleTextBlock(text string) []slack.Block {
-	blocks := []slack.Block{SingleTextSectionBlock(Markdown, text)}
+	blocks := []slack.Block{SingleTextSectionBlock(util.Markdown, text)}
 	return blocks
 }

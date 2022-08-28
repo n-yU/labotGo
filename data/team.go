@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/n-yU/labotGo/post"
-	. "github.com/n-yU/labotGo/util"
+	"github.com/n-yU/labotGo/util"
 	"github.com/slack-go/slack"
 )
 
@@ -22,7 +22,7 @@ type TeamsData map[string]*TeamData
 
 // チームデータ 読み込み
 func LoadTeam() (td TeamsData, err error) {
-	f, err := os.Open(TeamDataPath())
+	f, err := os.Open(util.TeamDataPath())
 	if err != nil {
 		return td, err
 	}
@@ -42,7 +42,7 @@ func (td TeamsData) Update() (err error) {
 		return err
 	}
 
-	err = ioutil.WriteFile(TeamDataPath(), bs, os.ModePerm)
+	err = ioutil.WriteFile(util.TeamDataPath(), bs, os.ModePerm)
 	return err
 }
 
@@ -57,7 +57,7 @@ func (td TeamsData) GetAllNames() (teamNames []string) {
 // 全編集可能チームリスト 取得
 func (td TeamsData) GetAllEditedNames() (teamName []string) {
 	for _, t := range td.GetAllNames() {
-		if t != MasterTeamName {
+		if t != util.MasterTeamName {
 			teamName = append(teamName, t)
 		}
 	}
@@ -68,20 +68,20 @@ func (td TeamsData) GetAllEditedNames() (teamName []string) {
 func (td TeamsData) GetErrBlocks(err error, dataErrType string) []slack.Block {
 	var text string
 	switch dataErrType {
-	case DataLoadErr:
+	case util.DataLoadErr:
 		text = "チームデータの読み込みに失敗しました"
-	case DataUpdateErr:
+	case util.DataUpdateErr:
 		text = "チームデータの更新に失敗しました"
 	default:
-		Logger.Fatalf("データエラータイプ %s は未定義です\n", dataErrType)
+		util.Logger.Fatalf("データエラータイプ %s は未定義です\n", dataErrType)
 	}
 
-	headerSection := post.SingleTextSectionBlock(PlainText, post.ErrText(text))
-	tipsSection := post.TipsSection(post.TipsDataError(TeamDataPath()))
+	headerSection := post.SingleTextSectionBlock(util.PlainText, post.ErrText(text))
+	tipsSection := post.TipsSection(post.TipsDataError(util.TeamDataPath()))
 	blocks := []slack.Block{headerSection, tipsSection}
 
-	Logger.Println(text)
-	Logger.Println(err)
+	util.Logger.Println(text)
+	util.Logger.Println(err)
 	return blocks
 }
 

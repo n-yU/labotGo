@@ -8,7 +8,7 @@ import (
 	"github.com/n-yU/labotGo/aid"
 	"github.com/n-yU/labotGo/data"
 	"github.com/n-yU/labotGo/post"
-	. "github.com/n-yU/labotGo/util"
+	"github.com/n-yU/labotGo/util"
 	"github.com/slack-go/slack"
 )
 
@@ -21,18 +21,18 @@ func getBlockAdd() (blocks []slack.Block) {
 
 	// メンバーデータ 読み込み
 	if md, err = data.LoadMember(); err != nil {
-		blocks = md.GetErrBlocks(err, DataLoadErr)
+		blocks = md.GetErrBlocks(err, util.DataLoadErr)
 		return blocks
 	}
 
 	// ブロック: ヘッダ
 	headerText := post.InfoText("labotGo にチームを追加します\n\n")
 	headerText += "*チーム名と所属メンバーを選択してください*"
-	headerSection := post.SingleTextSectionBlock(Markdown, headerText)
+	headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
 
 	// ブロック: ヘッダ Tips
-	headerTipsText := []string{TipsMemberTeam,
-		fmt.Sprintf("所属メンバーは `%s team edit` で後から変更できます（ `%s member edit` でも可能）", Cmd, Cmd),
+	headerTipsText := []string{util.TipsMemberTeam,
+		fmt.Sprintf("所属メンバーは `%s team edit` で後から変更できます（ `%s member edit` でも可能）", util.Cmd, util.Cmd),
 	}
 	headerTipsSection := post.TipsSection(headerTipsText)
 
@@ -45,18 +45,18 @@ func getBlockAdd() (blocks []slack.Block) {
 	// ブロック: 追加ボタン
 	actionBtnBlock := post.BtnOK("追加", aid.AddTeam)
 
-	blocks = []slack.Block{headerSection, headerTipsSection, Divider(), nameSection, membersSection, actionBtnBlock}
+	blocks = []slack.Block{headerSection, headerTipsSection, util.Divider(), nameSection, membersSection, actionBtnBlock}
 	return blocks
 }
 
 // チーム追加
 func AddMember(blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
 	var ok bool
-	Logger.Printf("チーム追加リクエスト: %+v\n", blockActions)
+	util.Logger.Printf("チーム追加リクエスト: %+v\n", blockActions)
 
 	// チームデータ 読み込み
 	if td, err := data.LoadTeam(); err != nil {
-		blocks = td.GetErrBlocks(err, DataLoadErr)
+		blocks = td.GetErrBlocks(err, util.DataLoadErr)
 	} else {
 		var (
 			teamName string
@@ -76,7 +76,7 @@ func AddMember(blockActions map[string]map[string]slack.BlockAction) (blocks []s
 				}
 			}
 		}
-		Logger.Printf("チーム名: %s / 所属メンバー: %v\n", teamName, userIDs)
+		util.Logger.Printf("チーム名: %s / 所属メンバー: %v\n", teamName, userIDs)
 
 		// バリデーションチェック
 		if teamName == "" {
@@ -84,39 +84,39 @@ func AddMember(blockActions map[string]map[string]slack.BlockAction) (blocks []s
 		} else if idx := strings.Index(teamName, " "); idx >= 0 {
 			text := post.ErrText(fmt.Sprintf("チーム名にスペースを含めることはできません（%d文字目）", idx+1))
 			blocks = post.SingleTextBlock(text)
-		} else if ListContains(td.GetAllNames(), teamName) {
+		} else if util.ListContains(td.GetAllNames(), teamName) {
 			headerText := post.ErrText(fmt.Sprintf("指定したチーム名 `%s` は既に存在するため追加できません", teamName))
-			headerSection := post.SingleTextSectionBlock(Markdown, headerText)
-			tipsText := []string{fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください", Cmd)}
+			headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
+			tipsText := []string{fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください", util.Cmd)}
 			tipsSection := post.TipsSection(tipsText)
 			blocks = []slack.Block{headerSection, tipsSection}
-		} else if ListContains(userIDs, MasterUserID) {
-			blocks = post.SingleTextBlock(post.ErrText(TipsMasterUser()))
+		} else if util.ListContains(userIDs, util.MasterUserID) {
+			blocks = post.SingleTextBlock(post.ErrText(util.TipsMasterUser()))
 		} else {
 			// チームデータ更新
 			td[teamName] = &data.TeamData{UserIDs: userIDs}
 
 			if err = td.Update(); err != nil {
-				blocks = td.GetErrBlocks(err, DataUpdateErr)
+				blocks = td.GetErrBlocks(err, util.DataUpdateErr)
 			} else {
 				if err := td.SynchronizeMember(); err != nil {
-					blocks = post.SingleTextBlock(post.ErrText(ErrorSynchronizeData))
+					blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))
 				} else {
 					headerText := post.ScsText("*以下チームの追加に成功しました*")
-					headerSection := post.SingleTextSectionBlock(Markdown, headerText)
+					headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
 					teamInfoSection := post.InfoTeamSection(teamName, teamName, userIDs, []string{})
 					tipsText := []string{"続けてチームを追加したい場合，同じフォームを再利用できます"}
 					tipsSection := post.TipsSection(tipsText)
 					blocks, ok = []slack.Block{headerSection, teamInfoSection, tipsSection}, true
 
-					Logger.Println("チーム追加に成功しました")
+					util.Logger.Println("チーム追加に成功しました")
 				}
 			}
 		}
 	}
 
 	if !ok {
-		Logger.Println("チーム追加に失敗しました．詳細は Slack に投稿されたメッセージを確認してください．")
+		util.Logger.Println("チーム追加に失敗しました．詳細は Slack に投稿されたメッセージを確認してください．")
 	}
 	return blocks
 }

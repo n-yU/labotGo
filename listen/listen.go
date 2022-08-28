@@ -9,7 +9,7 @@ import (
 	"github.com/n-yU/labotGo/member"
 	"github.com/n-yU/labotGo/post"
 	"github.com/n-yU/labotGo/team"
-	. "github.com/n-yU/labotGo/util"
+	"github.com/n-yU/labotGo/util"
 	"github.com/slack-go/slack"
 )
 
@@ -37,7 +37,7 @@ func Command(cmd slack.SlashCommand) error {
 
 	// コマンド受信
 	userId, cmdText := cmd.UserID, cmd.Text
-	Logger.Printf("受信コマンド (from:%s): %s\n", userId, cmdText)
+	util.Logger.Printf("受信コマンド (from:%s): %s\n", userId, cmdText)
 	cmdType, cmdValues := splitCmd(cmdText)
 	isEmptyValues := (len(cmdValues) == 0)
 
@@ -46,22 +46,22 @@ func Command(cmd slack.SlashCommand) error {
 	case "hello":
 		if isEmptyValues {
 			text := "*Hello, World!*"
-			blocks, responseType, ok = post.SingleTextBlock(text), InChannel, true
+			blocks, responseType, ok = post.SingleTextBlock(text), util.InChannel, true
 		} else {
-			text := post.ErrText(fmt.Sprintf("%s *%s* に引数を与えることはできません\n", Cmd, cmdType))
-			blocks, responseType = post.SingleTextBlock(text), Ephemeral
+			text := post.ErrText(fmt.Sprintf("%s *%s* に引数を与えることはできません\n", util.Cmd, cmdType))
+			blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
 		}
 	case "member":
 		if isEmptyValues {
-			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります\n", Cmd, cmdType))
-			blocks, responseType = post.SingleTextBlock(text), Ephemeral
+			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります\n", util.Cmd, cmdType))
+			blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
 		} else {
 			blocks, responseType, ok = member.GetBlocks(cmdValues)
 		}
 	case "team":
 		if isEmptyValues {
-			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります\n", Cmd, cmdType))
-			blocks, responseType = post.SingleTextBlock(text), Ephemeral
+			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります\n", util.Cmd, cmdType))
+			blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
 		} else {
 			blocks, responseType, ok = team.GetBlocks(cmdValues)
 		}
@@ -70,15 +70,15 @@ func Command(cmd slack.SlashCommand) error {
 	case "group":
 
 	default:
-		text := post.ErrText(fmt.Sprintf("コマンド %s *%s* を使用することはできません\n", Cmd, cmdType))
-		blocks, responseType = post.SingleTextBlock(text), Ephemeral
+		text := post.ErrText(fmt.Sprintf("コマンド %s *%s* を使用することはできません\n", util.Cmd, cmdType))
+		blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
 	}
 
 	// コマンド処理 成功有無通知
 	if ok {
-		Logger.Printf("SUCCESSFUL command: %s\n", cmdText)
+		util.Logger.Printf("SUCCESSFUL command: %s\n", cmdText)
 	} else {
-		Logger.Printf("FAILED command: %s\n", cmdText)
+		util.Logger.Printf("FAILED command: %s\n", cmdText)
 	}
 
 	// メッセージ投稿
@@ -101,7 +101,7 @@ func BlockAction(callback slack.InteractionCallback) (err error) {
 	case strings.HasPrefix(actionID, aid.BaseTeam):
 		err = team.Action(actionID, callback)
 	default:
-		Logger.Printf("不明なアクション %s を受け取りました\n", actionID)
+		util.Logger.Printf("不明なアクション %s を受け取りました\n", actionID)
 	}
 
 	return err

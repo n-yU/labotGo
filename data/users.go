@@ -2,15 +2,15 @@
 package data
 
 import (
-	. "github.com/n-yU/labotGo/util"
+	"github.com/n-yU/labotGo/util"
 )
 
 // 全ユーザIDリスト 取得
 func GetAllUserIDs(isIncludeBot bool) (ids []string) {
-	users, err := SocketModeClient.GetUsers()
+	users, err := util.SocketModeClient.GetUsers()
 	if err != nil {
-		Logger.Println("ワークスペースの全ユーザIDリストの取得に失敗しました")
-		Logger.Fatal(err)
+		util.Logger.Println("ワークスペースの全ユーザIDリストの取得に失敗しました")
+		util.Logger.Fatal(err)
 	}
 
 	for _, u := range users {
@@ -19,14 +19,14 @@ func GetAllUserIDs(isIncludeBot bool) (ids []string) {
 		}
 	}
 
-	Logger.Println("ワークスペースの全ユーザIDリストの取得に成功しました")
+	util.Logger.Println("ワークスペースの全ユーザIDリストの取得に成功しました")
 	return ids
 }
 
 // 指定ID削除ユーザIDリスト 取得
 func GetLimitedUserIDs(excludeUserIDs []string) (ids []string) {
-	for _, uID := range AllUserIDs {
-		if !ListContains(excludeUserIDs, uID) {
+	for _, uID := range util.AllUserIDs {
+		if !util.ListContains(excludeUserIDs, uID) {
 			ids = append(ids, uID)
 		}
 	}
