@@ -18,10 +18,10 @@ func getBlockDeleteMemberSelect() (blocks []slack.Block) {
 	if md, err := data.LoadMember(); err != nil {
 		blocks = md.GetErrBlocks(err, DataLoadErr)
 	} else {
-		// ブロック: ヘッダー
+		// ブロック: ヘッダ
 		headerText := post.InfoText("*削除したいユーザを選択してください*")
 		headerSection := post.SingleTextSectionBlock(Markdown, headerText)
-		// ブロック: ヘッダー Tips
+		// ブロック: ヘッダ Tips
 		headerTipsText := []string{"メンバーを選択すると確認のメッセージが表示されます"}
 		headerTipsSection := post.TipsSection(headerTipsText)
 		// ブロック: メンバー選択
@@ -34,13 +34,14 @@ func getBlockDeleteMemberSelect() (blocks []slack.Block) {
 
 // メンバー削除リクエスト（確認）
 func DeleteMemberConfirm(blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
-	var userID string
+	Logger.Println("メンバー削除リクエスト")
 
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
 		blocks = md.GetErrBlocks(err, DataLoadErr)
 	} else {
 		// ユーザID・チームリスト 取得
+		var userID string
 		for _, action := range blockActions {
 			for actionId, values := range action {
 				switch actionId {
@@ -51,7 +52,7 @@ func DeleteMemberConfirm(blockActions map[string]map[string]slack.BlockAction) (
 			}
 		}
 		memberTeamNames := md[userID].TeamNames
-		Logger.Printf("ユーザID: %s / 変更前チームリスト: %v\n", userID, memberTeamNames)
+		Logger.Printf("ユーザID: %s / チームリスト: %v\n", userID, memberTeamNames)
 
 		headerSection := post.SingleTextSectionBlock(Markdown, "*以下メンバーを削除しますか？*")
 		memberInfoSection := post.InfoMemberSection(userID, memberTeamNames, memberTeamNames)
@@ -67,16 +68,13 @@ func DeleteMemberConfirm(blockActions map[string]map[string]slack.BlockAction) (
 // メンバー削除
 func DeleteMember(blockActions map[string]map[string]slack.BlockAction, userID string) (blocks []slack.Block) {
 	var ok bool
-	Logger.Printf("メンバー削除リクエスト: %+v\n", blockActions)
 
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
 		blocks = md.GetErrBlocks(err, DataLoadErr)
 	} else {
-		memberTeamName := md[userID]
-		Logger.Printf("ユーザID: %s / チームリスト: %v\n", userID, memberTeamName)
-
 		delete(md, userID)
+
 		if err = md.Update(); err != nil {
 			blocks = md.GetErrBlocks(err, DataUpdateErr)
 		} else {

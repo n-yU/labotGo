@@ -18,29 +18,18 @@ func getBlockEditTeamSelect() (blocks []slack.Block) {
 	if td, err := data.LoadTeam(); err != nil {
 		blocks = td.GetErrBlocks(err, DataLoadErr)
 	} else {
-		// ブロック: ヘッダー
+		// ブロック: ヘッダ
 		headerText := post.InfoText("*編集したいチームを選択してください*")
 		headerSection := post.SingleTextSectionBlock(Markdown, headerText)
-
-		// ブロック: ヘッダー Tips
+		// ブロック: ヘッダ Tips
 		headerTipsText := []string{
-			fmt.Sprintf("チームを追加する場合は `%s team add` を実行してください", Cmd),
-			"チーム `all` の編集・削除はできません",
+			fmt.Sprintf("チームを追加する場合は `%s team add` を実行してください", Cmd), "チーム `all` の編集・削除はできません",
 		}
 		headerTipsSection := post.TipsSection(headerTipsText)
-
 		// ブロック: チーム選択
-		teamSelectOptionText := post.TxtBlockObj(PlainText, "チームを選択")
-		teamOption := post.OptionBlockObjectList(td.GetAllEditedNames(), false)
-		teamSelectOption := slack.NewOptionsSelectBlockElement(
-			slack.OptTypeStatic, teamSelectOptionText, aid.EditTeamSelectName, teamOption...,
-		)
-		teamSelectText := post.TxtBlockObj(Markdown, "*チーム*")
-		teamSelectSection := slack.NewSectionBlock(teamSelectText, nil, slack.NewAccessory(teamSelectOption))
+		teamSelectSection := post.SelectTeamsSection(td.GetAllEditedNames(), aid.EditTeamSelectName, []string{}, false)
 
-		blocks = []slack.Block{
-			headerSection, headerTipsSection, Divider(), teamSelectSection,
-		}
+		blocks = []slack.Block{headerSection, headerTipsSection, Divider(), teamSelectSection}
 	}
 	return blocks
 }
@@ -77,10 +66,10 @@ func getBlockEditTeamInfo(blockActions map[string]map[string]slack.BlockAction) 
 	teamUserIDs := td[teamName].UserIDs
 	Logger.Printf("チーム名: %s / 変更前メンバーリスト: %v\n", teamName, teamUserIDs)
 
-	// ブロック: ヘッダー
+	// ブロック: ヘッダ
 	headerText := post.InfoText(fmt.Sprintf("*指定したチーム `%s` の情報を編集してください*", teamName))
 	headerSection := post.SingleTextSectionBlock(Markdown, headerText)
-	// ブロック: ヘッダー Tips
+	// ブロック: ヘッダ Tips
 	headerTipsText := []string{fmt.Sprintf("既存のチーム名への変更はできません（ `%s team list` で確認可能）", Cmd)}
 	headerTipsSection := post.TipsSection(headerTipsText)
 	// ブロック: チーム名入力

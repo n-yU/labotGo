@@ -17,11 +17,11 @@ func getBlockEditMemberSelect() (blocks []slack.Block) {
 	if md, err := data.LoadMember(); err != nil {
 		blocks = md.GetErrBlocks(err, DataLoadErr)
 	} else {
-		// ブロック: ヘッダー
+		// ブロック: ヘッダ
 		headerText := post.InfoText("*編集したいメンバーを選択してください*")
 		headerSection := post.SingleTextSectionBlock(Markdown, headerText)
 
-		// ブロック: ヘッダー Tips
+		// ブロック: ヘッダ Tips
 		headerTipsText := []string{fmt.Sprintf("メンバーを追加する場合は `%s member add` を実行してください", Cmd)}
 		headerTipsSection := post.TipsSection(headerTipsText)
 
@@ -63,14 +63,14 @@ func getBlockEditTeamsSelect(blockActions map[string]map[string]slack.BlockActio
 	memberTeamNames := md[userID].TeamNames
 	Logger.Printf("ユーザID: %s / 変更前チームリスト: %v\n", userID, memberTeamNames)
 
-	// ブロック: ヘッダー
+	// ブロック: ヘッダ
 	headerText := post.InfoText(fmt.Sprintf("*指定したメンバー <@%s> のチームを選択してください*", userID))
 	headerSection := post.SingleTextSectionBlock(Markdown, headerText)
-	// ブロック: ヘッダー Tips
+	// ブロック: ヘッダ Tips
 	headerTipsText := []string{"`all` は全メンバーが入るチームのため削除できません"}
 	headerTipsSection := post.TipsSection(headerTipsText)
 	// ブロック: チーム選択
-	teamSelectSection := post.SelectTeamsSection(td.GetAllNames(), aid.EditMemberSelectTeams, memberTeamNames)
+	teamSelectSection := post.SelectTeamsSection(td.GetAllNames(), aid.EditMemberSelectTeams, memberTeamNames, true)
 	// ブロック: 変更ボタン
 	actionBtnActionId := strings.Join([]string{aid.EditMember, userID}, "_")
 	actionBtnBlock := post.BtnOK("変更", actionBtnActionId)

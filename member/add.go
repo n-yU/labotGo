@@ -27,12 +27,12 @@ func getBlockAdd() []slack.Block {
 		return td.GetErrBlocks(err, DataLoadErr)
 	}
 
-	// ブロック: ヘッダー
+	// ブロック: ヘッダ
 	headerText := post.InfoText("labotGo にメンバーを追加します\n\n")
 	headerText += "*追加したいユーザと所属チームを選択してください*"
 	headerSection := post.SingleTextSectionBlock(Markdown, headerText)
 
-	// ブロック: ヘッダー Tips
+	// ブロック: ヘッダ Tips
 	headerTipsText := []string{TipsMemberTeam,
 		fmt.Sprintf("`%s team add` で追加したチームを選択できます（ `%s member edit` で後から変更可能）", Cmd, Cmd),
 		"チーム `all` は全メンバーが入るチームです．削除しないでください．",
@@ -43,7 +43,7 @@ func getBlockAdd() []slack.Block {
 	userSelectSection := post.SelectMembersSection(data.GetAllNonMembers(md), aid.AddMemberSelectUser, []string{}, false, false)
 
 	// ブロック: チーム選択
-	teamsSelectSection := post.SelectTeamsSection(td.GetAllNames(), aid.AddMemberSelectTeams, []string{MasterTeamName})
+	teamsSelectSection := post.SelectTeamsSection(td.GetAllNames(), aid.AddMemberSelectTeams, []string{MasterTeamName}, true)
 
 	// ブロック: 追加ボタン
 	actionBtnBlock := post.BtnOK("追加", aid.AddMember)

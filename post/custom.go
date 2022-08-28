@@ -110,8 +110,7 @@ func SelectMembersSection(userIDs []string, actionID string, initUserIDs []strin
 	options, initOptions := OptionBlockObjectList(userIDs, true), OptionBlockObjectList(initUserIDs, true)
 	selectOptionText := TxtBlockObj(PlainText, fmt.Sprintf("%sを選択", text))
 	selectOption := &slack.MultiSelectBlockElement{
-		Type: selectOptionType, Placeholder: selectOptionText, ActionID: actionID,
-		Options: options, InitialOptions: initOptions,
+		Type: selectOptionType, Placeholder: selectOptionText, ActionID: actionID, Options: options, InitialOptions: initOptions,
 	}
 	selectText := TxtBlockObj(Markdown, fmt.Sprintf("*%s*", text))
 	selectSection := slack.NewSectionBlock(selectText, nil, slack.NewAccessory(selectOption))
@@ -119,12 +118,18 @@ func SelectMembersSection(userIDs []string, actionID string, initUserIDs []strin
 }
 
 // 頻用セクション: チーム選択
-func SelectTeamsSection(teamNames []string, actionID string, initTeamNames []string) *slack.SectionBlock {
+func SelectTeamsSection(teamNames []string, actionID string, initTeamNames []string, isMulti bool) *slack.SectionBlock {
+	var selectOptionType string
+	if isMulti {
+		selectOptionType = slack.MultiOptTypeStatic
+	} else {
+		selectOptionType = slack.OptTypeStatic
+	}
+
 	options, initOptions := OptionBlockObjectList(teamNames, false), OptionBlockObjectList(initTeamNames, false)
 	selectOptionText := TxtBlockObj(PlainText, "チームを選択")
 	selectOption := &slack.MultiSelectBlockElement{
-		Type: slack.MultiOptTypeStatic, Placeholder: selectOptionText, ActionID: actionID,
-		Options: options, InitialOptions: initOptions,
+		Type: selectOptionType, Placeholder: selectOptionText, ActionID: actionID, Options: options, InitialOptions: initOptions,
 	}
 	selectText := TxtBlockObj(Markdown, "*チーム*")
 	selectSection := slack.NewSectionBlock(selectText, nil, slack.NewAccessory(selectOption))

@@ -25,12 +25,12 @@ func getBlockAdd() (blocks []slack.Block) {
 		return blocks
 	}
 
-	// ブロック: ヘッダー
+	// ブロック: ヘッダ
 	headerText := post.InfoText("labotGo にチームを追加します\n\n")
 	headerText += "*チーム名と所属メンバーを選択してください*"
 	headerSection := post.SingleTextSectionBlock(Markdown, headerText)
 
-	// ブロック: ヘッダー Tips
+	// ブロック: ヘッダ Tips
 	headerTipsText := []string{TipsMemberTeam,
 		fmt.Sprintf("所属メンバーは `%s team edit` で後から変更できます（ `%s member edit` でも可能）", Cmd, Cmd),
 	}
