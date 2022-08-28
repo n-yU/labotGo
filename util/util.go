@@ -99,17 +99,20 @@ func ListContains(list interface{}, elem interface{}) bool {
 	return false
 }
 
-// 文字列スライスを連結して重複する要素を削除
-func UniqueConcatSlice(slice1, slice2 []string) (unique []string) {
+// 文字列スライスから重複する要素を削除
+func UniqueSlice(slice []string) (unique []string) {
 	// ref.) https://zenn.dev/orangekame/articles/dad6d0e9382660
-	slice1 = append(slice1, slice2...)
 	encounter := map[string]bool{}
-
-	for _, v := range slice1 {
+	for _, v := range slice {
 		if _, ok := encounter[v]; !ok {
 			encounter[v] = true
 			unique = append(unique, v)
 		}
 	}
 	return unique
+}
+
+// 文字列スライスを連結して重複する要素を削除
+func UniqueConcatSlice(slice1, slice2 []string) []string {
+	return UniqueSlice(append(slice1, slice2...))
 }

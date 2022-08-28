@@ -73,7 +73,9 @@ func main() {
 					util.Logger.Printf("Ignored %+v \n", evt)
 					continue
 				}
-				util.Logger.Printf("Event を受け取りました: %+v\n", eventsAPIEvent)
+				if util.DebugMode {
+					util.Logger.Printf("Event を受け取りました: %+v\n", eventsAPIEvent)
+				}
 				util.SocketModeClient.Ack(*evt.Request)
 
 				switch eventsAPIEvent.Type {
@@ -87,12 +89,16 @@ func main() {
 					util.Logger.Printf("Ignored %+v\n", evt)
 					continue
 				}
-				util.Logger.Printf("Interaction を受け取りました\n")
+				if util.DebugMode {
+					util.Logger.Println("Interaction を受け取りました")
+				}
 				util.SocketModeClient.Ack(*evt.Request)
 
 				switch callback.Type {
 				case slack.InteractionTypeBlockActions:
-					util.Logger.Printf("Block Action を受け取りました: %+v\n", callback.BlockActionState)
+					if util.DebugMode {
+						util.Logger.Printf("Block Action を受け取りました: %+v\n", callback.BlockActionState)
+					}
 				default:
 					util.Logger.Printf("未対応の Block Action を受け取りました")
 				}

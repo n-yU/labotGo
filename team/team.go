@@ -13,7 +13,7 @@ import (
 
 // コマンド応答ブロック 取得
 func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, ok bool) {
-	switch subType := cmdValues[0]; subType {
+	switch subType, subValues := cmdValues[0], cmdValues[1:]; subType {
 	case "add":
 		blocks, ok = getBlockAdd(), true
 	case "edit":
@@ -21,9 +21,9 @@ func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, o
 	case "delete":
 		blocks, ok = getBlockDeleteTeamSelect(), true
 	case "list":
-
+		blocks, ok = getBlockListTeam(subValues), true
 	default:
-		text := post.ErrText(fmt.Sprintf("コマンド %s team *%s* を使用することはできません", util.Cmd, subType))
+		text := post.ErrText(fmt.Sprintf("コマンド %s team *%s* %s を使用することはできません", util.Cmd, subType, strings.Join(subValues, " ")))
 		blocks, ok = post.SingleTextBlock(text), false
 	}
 
