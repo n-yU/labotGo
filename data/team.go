@@ -4,6 +4,7 @@ package data
 import (
 	"io/ioutil"
 	"os"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -14,7 +15,9 @@ import (
 
 // チーム
 type TeamData struct {
-	UserIDs []string `yaml:"members"`
+	UserIDs       []string  `yaml:"members"`
+	CreatedUserID string    `yaml:"created_user"`
+	CreatedAt     time.Time `yaml:"created_at"`
 }
 
 // チームリスト
@@ -36,7 +39,7 @@ func LoadTeam() (td TeamsData, err error) {
 }
 
 // チームデータ 更新
-func (td TeamsData) Update() (err error) {
+func (td TeamsData) Reload() (err error) {
 	bs, err := yaml.Marshal(&td)
 	if err != nil {
 		return err
@@ -70,7 +73,7 @@ func (td TeamsData) GetErrBlocks(err error, dataErrType string) []slack.Block {
 	switch dataErrType {
 	case util.DataLoadErr:
 		text = "チームデータの読み込みに失敗しました"
-	case util.DataUpdateErr:
+	case util.DataReloadErr:
 		text = "チームデータの更新に失敗しました"
 	default:
 		util.Logger.Fatalf("データエラータイプ %s は未定義です\n", dataErrType)
@@ -86,17 +89,49 @@ func (td TeamsData) GetErrBlocks(err error, dataErrType string) []slack.Block {
 }
 
 // チームデータによるメンバーデータの同期
-func (td TeamsData) SynchronizeMember() (err error) {
-	md := MembersData{}
-	for teamName, team := range td {
-		for _, uID := range team.UserIDs {
-			if _, ok := md[uID]; !ok {
-				md[uID] = new(MemberData)
+func (td TeamsData) SynchronizeMember() error {
+	if oldMd, err := LoadMember(); err != nil {
+		return err
+	} else {
+		newMd := MembersData{}
+		for teamName, team := range td {
+			for _, userID := range team.UserIDs {
+				if _, ok := newMd[userID]; !ok {
+					newMd[userID] = NewMember(
+						userID, []string{}, oldMd[userID].CreatedUserID, oldMd[userID].CreatedAt,
+					)
+				}
+				newMd[userID].TeamNames = append(newMd[userID].TeamNames, teamName)
 			}
-			md[uID].TeamNames = append(md[uID].TeamNames, teamName)
 		}
-	}
 
-	err = md.Update()
-	return err
+		err = newMd.Reload()
+		return err
+	}
+}
+
+// 新規チーム
+func NewTeam(teamUserIDs []string, createdUserID string) *TeamData {
+	t := &TeamData{
+		UserIDs: teamUserIDs, CreatedUserID: createdUserID, CreatedAt: time.Now(),
+	}
+	return t
+}
+
+// チーム追加
+func (td TeamsData) Add(teamName string, teamUserIDs []string, actionUserID string) {
+	td[teamName] = NewTeam(teamUserIDs, actionUserID)
+}
+
+// チーム更新
+func (td TeamsData) Update(oldTeamName, newTeamName string, newUserIDs []string, actionUserID string) []string {
+	oldUserIDs, createdUserID := td[oldTeamName].UserIDs, td[oldTeamName].CreatedUserID
+	delete(td, oldTeamName)
+	td[newTeamName] = NewTeam(newUserIDs, createdUserID)
+	return oldUserIDs
+}
+
+// チーム削除
+func (td TeamsData) Delete(teamName string) {
+	delete(td, teamName)
 }

@@ -29,7 +29,7 @@ const (
 	ErrorSynchronizeData = "メンバーデータとチームデータの同期に失敗しました"
 
 	DataLoadErr   = "dataLoadError"
-	DataUpdateErr = "dataUpdateError"
+	DataReloadErr = "dataReloadError"
 )
 
 var (

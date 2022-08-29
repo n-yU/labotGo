@@ -35,20 +35,24 @@ func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, o
 
 // 指定アクション 実行
 func Action(actionID string, callback slack.InteractionCallback) (err error) {
-	var blocks []slack.Block
+	var (
+		blocks       = []slack.Block{}
+		actionUserID = callback.User.ID
+	)
+
 	switch {
 	case actionID == aid.AddMember:
-		blocks = AddMember(callback.BlockActionState.Values)
+		blocks = AddMember(actionUserID, callback.BlockActionState.Values)
 	case actionID == aid.EditMemberSelectMember:
-		blocks = getBlockEditTeamsSelect(callback.BlockActionState.Values)
+		blocks = getBlockEditTeamsSelect(actionUserID, callback.BlockActionState.Values)
 	case strings.HasPrefix(actionID, aid.EditMember+"_"):
 		userID := strings.Split(actionID, "_")[1]
-		blocks = EditMember(callback.BlockActionState.Values, userID)
+		blocks = EditMember(actionUserID, callback.BlockActionState.Values, userID)
 	case actionID == aid.DeleteMemberSelectMember:
-		blocks = DeleteMemberConfirm(callback.BlockActionState.Values)
+		blocks = DeleteMemberConfirm(actionUserID, callback.BlockActionState.Values)
 	case strings.HasPrefix(actionID, aid.DeleteMember+"_"):
 		userID := strings.Split(actionID, "_")[1]
-		blocks = DeleteMember(callback.BlockActionState.Values, userID)
+		blocks = DeleteMember(actionUserID, callback.BlockActionState.Values, userID)
 	}
 
 	if len(blocks) > 0 {

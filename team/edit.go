@@ -35,7 +35,7 @@ func getBlockEditTeamSelect() (blocks []slack.Block) {
 }
 
 // チーム編集リクエスト（チーム名入力・メンバー選択）
-func getBlockEditTeamInfo(blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
+func getBlockEditTeamInfo(actionUserID string, blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
 	var (
 		md  data.MembersData
 		td  data.TeamsData
@@ -85,67 +85,76 @@ func getBlockEditTeamInfo(blockActions map[string]map[string]slack.BlockAction) 
 }
 
 // チーム編集
-func EditTeam(blockActions map[string]map[string]slack.BlockAction, oldTeamName string) (blocks []slack.Block) {
-	var ok bool
-	util.Logger.Printf("チーム編集リクエスト: %+v\n", blockActions)
+func EditTeam(actionUserID string, blockActions map[string]map[string]slack.BlockAction, oldTeamName string) (blocks []slack.Block) {
+	var (
+		td          data.TeamsData
+		md          data.MembersData
+		err         error
+		ok          bool
+		newTeamName string
+		newUserIDs  []string
+	)
+	util.Logger.Printf("チーム編集リクエスト (from %s): %+v\n", actionUserID, blockActions)
 
-	// チームデータ 読み込み
-	if td, err := data.LoadTeam(); err != nil {
-		blocks = td.GetErrBlocks(err, util.DataLoadErr)
-	} else {
-		var (
-			newTeamName string
-			newUserIDs  []string
-		)
-		// チーム名・所属メンバー 取得
-		for _, action := range blockActions {
-			for actionId, values := range action {
-				switch actionId {
-				case aid.EditTeamInputName:
-					newTeamName = values.Value
-				case aid.EditTeamSelectMembers:
-					for _, mID := range values.SelectedOptions {
-						newUserIDs = append(newUserIDs, data.RawUserID(string(mID.Value)))
-					}
-				default:
+	// チーム・メンバー データ 読み込み
+	if td, err = data.LoadTeam(); err != nil {
+		return td.GetErrBlocks(err, util.DataLoadErr)
+	}
+	if md, err = data.LoadMember(); err != nil {
+		return md.GetErrBlocks(err, util.DataLoadErr)
+	}
+
+	// チーム名・所属メンバー 取得
+	for _, action := range blockActions {
+		for actionId, values := range action {
+			switch actionId {
+			case aid.EditTeamInputName:
+				newTeamName = values.Value
+			case aid.EditTeamSelectMembers:
+				for _, mID := range values.SelectedOptions {
+					newUserIDs = append(newUserIDs, data.RawUserID(string(mID.Value)))
 				}
+			default:
 			}
 		}
-		util.Logger.Printf("チーム名: %s → %s / メンバーリスト: %v\n", oldTeamName, newTeamName, newUserIDs)
+	}
+	util.Logger.Printf("チーム名: %s → %s / メンバーリスト: %v\n", oldTeamName, newTeamName, newUserIDs)
 
-		// バリデーションチェック
-		if newTeamName == "" {
-			blocks = post.SingleTextBlock(post.ErrText("チーム名が入力されていません"))
-		} else if idx := strings.Index(newTeamName, " "); idx >= 0 {
-			text := post.ErrText(fmt.Sprintf("チーム名にスペースを含めることはできません（%d文字目）", idx+1))
-			blocks = post.SingleTextBlock(text)
-		} else if newTeamName != oldTeamName && util.ListContains(td.GetAllNames(), newTeamName) {
-			headerText := post.ErrText(fmt.Sprintf("新しいチーム名 `%s` は既に存在するため変更できません", newTeamName))
-			headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
-			tipsText := []string{fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください", util.Cmd)}
-			tipsSection := post.TipsSection(tipsText)
-			blocks = []slack.Block{headerSection, tipsSection}
+	// バリデーションチェック
+	if newTeamName == "" {
+		blocks = post.SingleTextBlock(post.ErrText("チーム名が入力されていません"))
+	} else if idx := strings.Index(newTeamName, " "); idx >= 0 {
+		text := post.ErrText(fmt.Sprintf("チーム名にスペースを含めることはできません（%d文字目）", idx+1))
+		blocks = post.SingleTextBlock(text)
+	} else if newTeamName != oldTeamName && util.ListContains(td.GetAllNames(), newTeamName) {
+		headerText := post.ErrText(fmt.Sprintf("新しいチーム名 `%s` は既に存在するため変更できません", newTeamName))
+		headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
+		tipsText := []string{fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください", util.Cmd)}
+		tipsSection := post.TipsSection(tipsText)
+		blocks = []slack.Block{headerSection, tipsSection}
+	} else {
+		// チームデータ更新
+		oldUserIDs := td.Update(oldTeamName, newTeamName, newUserIDs, actionUserID)
+
+		if err = td.Reload(); err != nil {
+			blocks = td.GetErrBlocks(err, util.DataReloadErr)
 		} else {
-			// チームデータ更新
-			oldUserIDs := td[oldTeamName].UserIDs
-			delete(td, oldTeamName)
-			td[newTeamName] = &data.TeamData{UserIDs: newUserIDs}
-
-			if err = td.Update(); err != nil {
-				blocks = td.GetErrBlocks(err, util.DataUpdateErr)
+			if err := td.SynchronizeMember(); err != nil {
+				blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))
 			} else {
-				if err := td.SynchronizeMember(); err != nil {
-					blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))
-				} else {
-					headerText := post.ScsText("*チーム情報を以下のように変更しました*")
-					headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
-					tipsText := []string{"指定したチームかつチーム名を変更していない限り，上記フォームを再利用できます"}
-					tipsSection := post.TipsSection(tipsText)
-					teamInfoSection := post.InfoTeamSection(newTeamName, oldTeamName, newUserIDs, oldUserIDs)
+				headerText := post.ScsText("*チーム情報を以下のように変更しました*")
+				headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
+				tipsText := []string{"指定したチームかつチーム名を変更していない限り，上記フォームを再利用できます"}
+				tipsSection := post.TipsSection(tipsText)
+				profImages := md.GetProfImages(util.UniqueConcatSlice(newUserIDs, oldUserIDs))
+				teamInfoSections := post.InfoTeamSections(newTeamName, oldTeamName, profImages, newUserIDs, oldUserIDs)
 
-					blocks, ok = []slack.Block{headerSection, teamInfoSection, tipsSection}, true
-					util.Logger.Println("チーム編集に成功しました")
+				blocks = []slack.Block{headerSection}
+				for _, teamInfoSec := range teamInfoSections {
+					blocks = append(blocks, teamInfoSec)
 				}
+				blocks, ok = append(blocks, tipsSection), true
+				util.Logger.Println("チーム編集に成功しました")
 			}
 		}
 	}

@@ -55,9 +55,9 @@ func getBlockAdd() []slack.Block {
 }
 
 // メンバー追加
-func AddMember(blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
+func AddMember(actionUserID string, blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
 	var ok bool
-	util.Logger.Printf("メンバー追加リクエスト: %+v\n", blockActions)
+	util.Logger.Printf("メンバー追加リクエスト (from:%s): %+v\n", actionUserID, blockActions)
 
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
@@ -100,17 +100,17 @@ func AddMember(blockActions map[string]map[string]slack.BlockAction) (blocks []s
 			blocks = post.SingleTextBlock(post.ErrText(util.TipsMasterTeam))
 		} else {
 			// メンバーデータ 更新
-			md[userID] = &data.MemberData{TeamNames: teamNames}
+			md.Add(userID, teamNames, actionUserID)
 
-			if err = md.Update(); err != nil {
-				blocks = md.GetErrBlocks(err, util.DataUpdateErr)
+			if err = md.Reload(); err != nil {
+				blocks = md.GetErrBlocks(err, util.DataReloadErr)
 			} else {
 				if err := md.SynchronizeTeam(); err != nil {
 					blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))
 				} else {
 					headerText := post.ScsText("*以下ユーザのメンバー追加に成功しました*")
 					headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
-					memberInfoSection := post.InfoMemberSection(userID, teamNames, teamNames)
+					memberInfoSection := post.InfoMemberSection(md[userID].Image24, userID, teamNames, teamNames)
 					tipsText := []string{"続けてメンバーを追加したい場合，同じフォームを再利用できます"}
 					tipsSection := post.TipsSection(tipsText)
 

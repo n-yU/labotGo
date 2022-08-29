@@ -137,6 +137,16 @@ func main() {
 	}
 	util.Logger.Printf("labotGo %s を起動しました\n", util.Version)
 
+	// 全ユーザIDリスト 取得
+	util.AllUserIDs = data.GetAllUserIDs(util.DeveloperMode)
+
+	// マスタユーザID（labotGo ID）取得
+	response, err := util.SocketModeClient.AuthTest()
+	if err != nil {
+		log.Fatal(err)
+	}
+	util.MasterUserID = response.UserID
+
 	// 初回起動チェック（データファイル生成）
 	isFirstRun, err := checkFirstRun()
 	if isFirstRun {
@@ -155,16 +165,6 @@ func main() {
 		}
 	}
 	util.Logger.Println("Tips: ボットが正常に動作しなくなる恐れがあるため，メンバー／チームデータは直接編集しないでください")
-
-	// 全ユーザIDリスト 取得
-	util.AllUserIDs = data.GetAllUserIDs(util.DeveloperMode)
-
-	// マスタユーザID（labotGo ID）取得
-	response, err := util.SocketModeClient.AuthTest()
-	if err != nil {
-		log.Fatal(err)
-	}
-	util.MasterUserID = response.UserID
 
 	// Socket Mode
 	util.SocketModeClient.Run()
@@ -207,14 +207,16 @@ func checkFirstRun() (isFirstRun bool, err error) {
 	}
 
 	// メンバーデータ 初期設定
-	md := data.MembersData{util.MasterUserID: &data.MemberData{TeamNames: []string{util.MasterTeamName}}}
-	if err := md.Update(); err != nil {
+	md := data.MembersData{}
+	md.Add(util.MasterUserID, []string{util.MasterTeamName}, util.MasterUserID)
+	if err := md.Reload(); err != nil {
 		util.Logger.Fatal(err)
 	}
 
 	// チームデータ 初期設定
-	td := data.TeamsData{util.MasterTeamName: &data.TeamData{UserIDs: []string{util.MasterUserID}}}
-	if err := td.Update(); err != nil {
+	td := data.TeamsData{}
+	td.Add(util.MasterTeamName, []string{util.MasterUserID}, util.MasterUserID)
+	if err := td.Reload(); err != nil {
 		util.Logger.Fatal(err)
 	}
 

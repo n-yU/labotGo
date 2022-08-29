@@ -33,50 +33,63 @@ func getBlockDeleteTeamSelect() (blocks []slack.Block) {
 }
 
 // チーム削除リクエスト（確認）
-func DeleteTeamConfirm(blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
-	util.Logger.Println("チーム削除リクエスト")
+func DeleteTeamConfirm(actionUserID string, blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
+	var (
+		td  data.TeamsData
+		md  data.MembersData
+		err error
+	)
+	util.Logger.Printf("チーム削除リクエスト (from %s):%+v", actionUserID, blockActions)
 
-	// チームデータ 読み込み
-	if td, err := data.LoadTeam(); err != nil {
-		blocks = td.GetErrBlocks(err, util.DataLoadErr)
-	} else {
-		var teamName string
-		// ユーザID・チームリスト 取得
-		for _, action := range blockActions {
-			for actionId, values := range action {
-				switch actionId {
-				case aid.DeleteTeamSelectTeam:
-					teamName = values.SelectedOption.Value
-				default:
-				}
-			}
-		}
-		teamUserIDs := td[teamName].UserIDs
-		util.Logger.Printf("チーム名: %s / メンバーリスト: %v\n", teamName, teamUserIDs)
-
-		headerSection := post.SingleTextSectionBlock(util.Markdown, "*以下チームを削除しますか？*")
-		teamInfoSection := post.InfoTeamSection(teamName, teamName, teamUserIDs, teamUserIDs)
-		actionBtnActionId := strings.Join([]string{aid.DeleteTeam, teamName}, "_")
-		actionBtnBlock := post.BtnOK("削除", actionBtnActionId)
-
-		blocks = []slack.Block{headerSection, teamInfoSection, actionBtnBlock}
+	// チーム・メンバーデータ 読み込み
+	if td, err = data.LoadTeam(); err != nil {
+		return td.GetErrBlocks(err, util.DataLoadErr)
+	}
+	if td, err = data.LoadTeam(); err != nil {
+		return td.GetErrBlocks(err, util.DataLoadErr)
 	}
 
+	var teamName string
+	// ユーザID・チームリスト 取得
+	for _, action := range blockActions {
+		for actionId, values := range action {
+			switch actionId {
+			case aid.DeleteTeamSelectTeam:
+				teamName = values.SelectedOption.Value
+			default:
+			}
+		}
+	}
+	teamUserIDs := td[teamName].UserIDs
+	util.Logger.Printf("チーム名: %s / メンバーリスト: %v\n", teamName, teamUserIDs)
+
+	headerSection := post.SingleTextSectionBlock(util.Markdown, "*以下チームを削除しますか？*")
+	profImages := md.GetProfImages(teamUserIDs)
+	teamInfoSections := post.InfoTeamSections(teamName, teamName, profImages, teamUserIDs, teamUserIDs)
+	actionBtnActionId := strings.Join([]string{aid.DeleteTeam, teamName}, "_")
+	actionBtnBlock := post.BtnOK("削除", actionBtnActionId)
+
+	blocks = []slack.Block{headerSection}
+	for _, teamInfoSec := range teamInfoSections {
+		blocks = append(blocks, teamInfoSec)
+	}
+	blocks = append(blocks, actionBtnBlock)
 	return blocks
 }
 
 // チーム削除
-func DeleteTeam(blockActions map[string]map[string]slack.BlockAction, teamName string) (blocks []slack.Block) {
+func DeleteTeam(actionUserID string, blockActions map[string]map[string]slack.BlockAction, teamName string) (blocks []slack.Block) {
 	var ok bool
 
 	// チームデータ 読み込み
 	if td, err := data.LoadTeam(); err != nil {
 		blocks = td.GetErrBlocks(err, util.DataLoadErr)
 	} else {
-		delete(td, teamName)
+		// チーム削除
+		td.Delete(teamName)
 
-		if err = td.Update(); err != nil {
-			blocks = td.GetErrBlocks(err, util.DataUpdateErr)
+		if err = td.Reload(); err != nil {
+			blocks = td.GetErrBlocks(err, util.DataReloadErr)
 		} else {
 			if err := td.SynchronizeMember(); err != nil {
 				blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))

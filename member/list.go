@@ -29,7 +29,7 @@ func getBlockListMember() (blocks []slack.Block) {
 
 		// ブロック: メンバー情報
 		for userID, m := range md {
-			memberInfoSection := post.InfoMemberSection(userID, m.TeamNames, m.TeamNames)
+			memberInfoSection := post.InfoMemberSection(md[userID].Image24, userID, m.TeamNames, m.TeamNames)
 			blocks = append(blocks, memberInfoSection)
 		}
 

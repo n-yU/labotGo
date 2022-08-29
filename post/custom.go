@@ -137,9 +137,12 @@ func SelectTeamsSection(teamNames []string, actionID string, initTeamNames []str
 }
 
 // 頻用セクション: メンバー情報
-func InfoMemberSection(userID string, newTeamNames, oldTeamNames []string) *slack.SectionBlock {
-	var infoTeams *slack.TextBlockObject
-	infoUserID := TxtBlockObj(util.Markdown, fmt.Sprintf("*ユーザ*:\n<@%s>", userID))
+func InfoMemberSection(profImage, userID string, newTeamNames, oldTeamNames []string) *slack.ContextBlock {
+	var teamNamesField *slack.TextBlockObject
+
+	userInfoObject := TxtBlockObj(util.Markdown, "*ユーザ*:")
+	profImageObject := slack.NewImageBlockElement(profImage, userID)
+	userIDObject := TxtBlockObj(util.Markdown, fmt.Sprintf("<@%s>", userID))
 
 	infoTeamsTextList := []string{}
 	for _, teamName := range util.UniqueConcatSlice(oldTeamNames, newTeamNames) {
@@ -153,24 +156,32 @@ func InfoMemberSection(userID string, newTeamNames, oldTeamNames []string) *slac
 		}
 		infoTeamsTextList = append(infoTeamsTextList, teamNameText)
 	}
-	infoTeams = TxtBlockObj(util.Markdown, fmt.Sprintf("*チーム*:\n%s", strings.Join(infoTeamsTextList, ", ")))
+	teamInfoObject := TxtBlockObj(util.Markdown, "*チーム*:")
+	teamNamesField = TxtBlockObj(util.Markdown, fmt.Sprintf("%s", strings.Join(infoTeamsTextList, ", ")))
 
-	infoField := []*slack.TextBlockObject{infoUserID, infoTeams}
-	infoSection := slack.NewSectionBlock(nil, infoField, nil)
+	elements := []slack.MixedElement{
+		userInfoObject, profImageObject, userIDObject, teamInfoObject, teamNamesField,
+	}
+	infoSection := slack.NewContextBlock("", elements...)
+
 	return infoSection
 }
 
 // 頻用セクション: チーム情報
-func InfoTeamSection(newTeamName, oldTeamName string, newUserIDs, oldUserIDs []string) *slack.SectionBlock {
-	var infoName, infoMembers *slack.TextBlockObject
+func InfoTeamSections(newTeamName, oldTeamName string, profImages map[string]string, newUserIDs, oldUserIDs []string) (infoSections []*slack.ContextBlock) {
+	var nameObj, userIDsInfo *slack.TextBlockObject
 
+	nameInfoObj := TxtBlockObj(util.Markdown, "*チーム名*:")
 	if oldTeamName == newTeamName {
-		infoName = TxtBlockObj(util.Markdown, fmt.Sprintf("*チーム名*:\n%s", newTeamName))
+		nameObj = TxtBlockObj(util.Markdown, fmt.Sprintf("%s", newTeamName))
 	} else {
-		infoName = TxtBlockObj(util.Markdown, fmt.Sprintf("*チーム名*:\n~%s~ → *%s*", oldTeamName, newTeamName))
+		nameObj = TxtBlockObj(util.Markdown, fmt.Sprintf("~%s~ → *%s*", oldTeamName, newTeamName))
 	}
+	infoSections = append(infoSections, slack.NewContextBlock("", []slack.MixedElement{nameInfoObj, nameObj}...))
+
+	userIDsInfoObj := TxtBlockObj(util.Markdown, "*メンバー*:")
+	elements := []slack.MixedElement{userIDsInfoObj}
 	if len(oldUserIDs)+len(newUserIDs) > 0 {
-		infoMembersTextList := []string{}
 		for _, userID := range util.UniqueConcatSlice(oldUserIDs, newUserIDs) {
 			var userIDText string
 			if isOld, isNew := util.ListContains(oldUserIDs, userID), util.ListContains(newUserIDs, userID); isOld && isNew {
@@ -181,16 +192,24 @@ func InfoTeamSection(newTeamName, oldTeamName string, newUserIDs, oldUserIDs []s
 				userIDText = fmt.Sprintf("*<@%s>*", userID)
 			} else {
 			}
-			infoMembersTextList = append(infoMembersTextList, userIDText)
+			elements = append(elements, slack.NewImageBlockElement(profImages[userID], userID))
+			elements = append(elements, TxtBlockObj(util.Markdown, userIDText))
+
+			// Context の element の上限は10個のためセクション化してリセット
+			if len(elements) >= 9 {
+				infoSections = append(infoSections, slack.NewContextBlock("", elements...))
+				elements = []slack.MixedElement{TxtBlockObj(util.Markdown, "　　　　 ")}
+			}
 		}
-		infoMembers = TxtBlockObj(util.Markdown, fmt.Sprintf("*メンバー*:\n%s", strings.Join(infoMembersTextList, ", ")))
 	} else {
-		infoMembers = TxtBlockObj(util.Markdown, "*メンバー*:\n所属メンバーなし")
+		userIDsInfo = TxtBlockObj(util.Markdown, "所属メンバーなし")
+		elements = append(elements, userIDsInfo)
 	}
 
-	infoField := []*slack.TextBlockObject{infoName, infoMembers}
-	infoSection := slack.NewSectionBlock(nil, infoField, nil)
-	return infoSection
+	if len(elements) > 1 {
+		infoSections = append(infoSections, slack.NewContextBlock("", elements...))
+	}
+	return infoSections
 }
 
 // 頻用セクション: チーム名入力

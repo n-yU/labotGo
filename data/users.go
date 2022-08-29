@@ -41,5 +41,9 @@ func GetAllNonMembers(md MembersData) []string {
 // メンションフォーマットからのユーザID取得
 func RawUserID(value string) string {
 	// ref.) https://api.slack.com/reference/surfaces/formatting#mentioning-users
-	return value[2 : len(value)-1]
+	if len(value) == 0 {
+		return value
+	} else {
+		return value[2 : len(value)-1]
+	}
 }

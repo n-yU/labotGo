@@ -33,8 +33,8 @@ func getBlockDeleteMemberSelect() (blocks []slack.Block) {
 }
 
 // メンバー削除リクエスト（確認）
-func DeleteMemberConfirm(blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
-	util.Logger.Println("メンバー削除リクエスト")
+func DeleteMemberConfirm(actionUserID string, blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
+	util.Logger.Printf("メンバー削除リクエスト (from:%s): %+v\n", actionUserID, blockActions)
 
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
@@ -55,7 +55,7 @@ func DeleteMemberConfirm(blockActions map[string]map[string]slack.BlockAction) (
 		util.Logger.Printf("ユーザID: %s / チームリスト: %v\n", userID, memberTeamNames)
 
 		headerSection := post.SingleTextSectionBlock(util.Markdown, "*以下メンバーを削除しますか？*")
-		memberInfoSection := post.InfoMemberSection(userID, memberTeamNames, memberTeamNames)
+		memberInfoSection := post.InfoMemberSection(md[userID].Image24, userID, memberTeamNames, memberTeamNames)
 		actionBtnActionId := strings.Join([]string{aid.DeleteMember, userID}, "_")
 		actionBtnBlock := post.BtnOK("削除", actionBtnActionId)
 
@@ -66,17 +66,18 @@ func DeleteMemberConfirm(blockActions map[string]map[string]slack.BlockAction) (
 }
 
 // メンバー削除
-func DeleteMember(blockActions map[string]map[string]slack.BlockAction, userID string) (blocks []slack.Block) {
+func DeleteMember(actionUserID string, blockActions map[string]map[string]slack.BlockAction, userID string) (blocks []slack.Block) {
 	var ok bool
 
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
 		blocks = md.GetErrBlocks(err, util.DataLoadErr)
 	} else {
-		delete(md, userID)
+		// メンバー削除
+		md.Delete(userID)
 
-		if err = md.Update(); err != nil {
-			blocks = md.GetErrBlocks(err, util.DataUpdateErr)
+		if err = md.Reload(); err != nil {
+			blocks = md.GetErrBlocks(err, util.DataReloadErr)
 		} else {
 			if err := md.SynchronizeTeam(); err != nil {
 				blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))
