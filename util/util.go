@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/slack-go/slack"
@@ -115,4 +116,10 @@ func UniqueSlice(slice []string) (unique []string) {
 // 文字列スライスを連結して重複する要素を削除
 func UniqueConcatSlice(slice1, slice2 []string) []string {
 	return UniqueSlice(append(slice1, slice2...))
+}
+
+// 時刻フォーマット
+func FormatTime(t time.Time) string {
+	tz, _ := time.LoadLocation("Asia/Tokyo")
+	return t.In(tz).Format("2006/01/02 15:04:05")
 }

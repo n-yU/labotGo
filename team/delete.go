@@ -16,7 +16,7 @@ import (
 func getBlockDeleteTeamSelect() (blocks []slack.Block) {
 	// チームデータ 読み込み
 	if td, err := data.LoadTeam(); err != nil {
-		blocks = td.GetErrBlocks(err, util.DataLoadErr)
+		blocks = post.GetErrBlocksTeamsData(err, util.DataLoadErr)
 	} else {
 		// ブロック: ヘッダ
 		headerText := post.InfoText("*削除したいチームを選択してください*")
@@ -43,10 +43,10 @@ func DeleteTeamConfirm(actionUserID string, blockActions map[string]map[string]s
 
 	// チーム・メンバーデータ 読み込み
 	if td, err = data.LoadTeam(); err != nil {
-		return td.GetErrBlocks(err, util.DataLoadErr)
+		return post.GetErrBlocksTeamsData(err, util.DataLoadErr)
 	}
-	if td, err = data.LoadTeam(); err != nil {
-		return td.GetErrBlocks(err, util.DataLoadErr)
+	if md, err = data.LoadMember(); err != nil {
+		return post.GetErrBlocksMembersData(err, util.DataLoadErr)
 	}
 
 	var teamName string
@@ -65,7 +65,7 @@ func DeleteTeamConfirm(actionUserID string, blockActions map[string]map[string]s
 
 	headerSection := post.SingleTextSectionBlock(util.Markdown, "*以下チームを削除しますか？*")
 	profImages := md.GetProfImages(teamUserIDs)
-	teamInfoSections := post.InfoTeamSections(teamName, teamName, profImages, teamUserIDs, teamUserIDs)
+	teamInfoSections := post.InfoTeamSections(teamName, teamName, profImages, teamUserIDs, teamUserIDs, nil)
 	actionBtnActionId := strings.Join([]string{aid.DeleteTeam, teamName}, "_")
 	actionBtnBlock := post.BtnOK("削除", actionBtnActionId)
 
@@ -83,13 +83,13 @@ func DeleteTeam(actionUserID string, blockActions map[string]map[string]slack.Bl
 
 	// チームデータ 読み込み
 	if td, err := data.LoadTeam(); err != nil {
-		blocks = td.GetErrBlocks(err, util.DataLoadErr)
+		blocks = post.GetErrBlocksTeamsData(err, util.DataLoadErr)
 	} else {
 		// チーム削除
 		td.Delete(teamName)
 
 		if err = td.Reload(); err != nil {
-			blocks = td.GetErrBlocks(err, util.DataReloadErr)
+			blocks = post.GetErrBlocksTeamsData(err, util.DataReloadErr)
 		} else {
 			if err := td.SynchronizeMember(); err != nil {
 				blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))

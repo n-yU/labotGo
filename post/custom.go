@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/n-yU/labotGo/data"
 	"github.com/n-yU/labotGo/util"
 	"github.com/slack-go/slack"
 )
@@ -137,7 +138,9 @@ func SelectTeamsSection(teamNames []string, actionID string, initTeamNames []str
 }
 
 // 頻用セクション: メンバー情報
-func InfoMemberSection(profImage, userID string, newTeamNames, oldTeamNames []string) *slack.ContextBlock {
+func InfoMemberSection(
+	profImage, userID string, newTeamNames, oldTeamNames []string, createdInfo *data.CreatedInfo,
+) []*slack.ContextBlock {
 	var teamNamesField *slack.TextBlockObject
 
 	userInfoObject := TxtBlockObj(util.Markdown, "*ユーザ*:")
@@ -162,25 +165,48 @@ func InfoMemberSection(profImage, userID string, newTeamNames, oldTeamNames []st
 	elements := []slack.MixedElement{
 		userInfoObject, profImageObject, userIDObject, teamInfoObject, teamNamesField,
 	}
-	infoSection := slack.NewContextBlock("", elements...)
+	infoSections := []*slack.ContextBlock{slack.NewContextBlock("", elements...)}
 
-	return infoSection
+	// 詳細版（listコマンド使用時）
+	if createdInfo != nil {
+		elements := []slack.MixedElement{
+			TxtBlockObj(util.Markdown, "作成"), slack.NewImageBlockElement(createdInfo.Image, userID),
+			TxtBlockObj(util.Markdown, fmt.Sprintf("<@%s>", createdInfo.UserID)),
+			TxtBlockObj(util.Markdown, util.FormatTime(createdInfo.At)),
+		}
+		infoSections = append(infoSections, slack.NewContextBlock("", elements...))
+	}
+
+	return infoSections
 }
 
 // 頻用セクション: チーム情報
-func InfoTeamSections(newTeamName, oldTeamName string, profImages map[string]string, newUserIDs, oldUserIDs []string) (infoSections []*slack.ContextBlock) {
+func InfoTeamSections(
+	newTeamName, oldTeamName string, profImages map[string]string, newUserIDs, oldUserIDs []string, createdInfo *data.CreatedInfo,
+) (infoSections []*slack.ContextBlock) {
 	var nameObj, userIDsInfo *slack.TextBlockObject
 
 	nameInfoObj := TxtBlockObj(util.Markdown, "*チーム名*:")
 	if oldTeamName == newTeamName {
-		nameObj = TxtBlockObj(util.Markdown, fmt.Sprintf("%s", newTeamName))
+		nameObj = TxtBlockObj(util.Markdown, fmt.Sprintf("*%s*", newTeamName))
 	} else {
 		nameObj = TxtBlockObj(util.Markdown, fmt.Sprintf("~%s~ → *%s*", oldTeamName, newTeamName))
 	}
-	infoSections = append(infoSections, slack.NewContextBlock("", []slack.MixedElement{nameInfoObj, nameObj}...))
+	elements := []slack.MixedElement{nameInfoObj, nameObj}
+
+	// 詳細版（listコマンド使用時）
+	if createdInfo != nil {
+		createdImageObj := slack.NewImageBlockElement(createdInfo.Image, createdInfo.UserID)
+		createdUserIDObj := TxtBlockObj(util.Markdown, fmt.Sprintf("<@%s>", createdInfo.UserID))
+		createdAtObj := TxtBlockObj(util.Markdown, util.FormatTime(createdInfo.At))
+		elements = append(elements, []slack.MixedElement{
+			TxtBlockObj(util.Markdown, "作成"), createdImageObj, createdUserIDObj, createdAtObj,
+		}...)
+	}
+	infoSections = append(infoSections, slack.NewContextBlock("", elements...))
 
 	userIDsInfoObj := TxtBlockObj(util.Markdown, "*メンバー*:")
-	elements := []slack.MixedElement{userIDsInfoObj}
+	elements = []slack.MixedElement{userIDsInfoObj}
 	if len(oldUserIDs)+len(newUserIDs) > 0 {
 		for _, userID := range util.UniqueConcatSlice(oldUserIDs, newUserIDs) {
 			var userIDText string
@@ -209,13 +235,14 @@ func InfoTeamSections(newTeamName, oldTeamName string, profImages map[string]str
 	if len(elements) > 1 {
 		infoSections = append(infoSections, slack.NewContextBlock("", elements...))
 	}
+
 	return infoSections
 }
 
 // 頻用セクション: チーム名入力
 func InputTeamNameSection(actionID string, initTeamName string) *slack.InputBlock {
 	inputSectionText := TxtBlockObj(util.PlainText, "チーム名")
-	inputSectionHint := TxtBlockObj(util.PlainText, "1〜20文字で入力してください ／ スペースは使用できません")
+	inputSectionHint := TxtBlockObj(util.PlainText, "1〜20文字で入力してください ／ 半角スペース・半角カンマは使用できません")
 	inputText := TxtBlockObj(util.PlainText, "チーム名を入力")
 	input := &slack.PlainTextInputBlockElement{
 		Type: slack.METPlainTextInput, ActionID: actionID, Placeholder: inputText, InitialValue: initTeamName,
@@ -228,5 +255,47 @@ func InputTeamNameSection(actionID string, initTeamName string) *slack.InputBloc
 // 頻用ブロック: シングルテキスト
 func SingleTextBlock(text string) []slack.Block {
 	blocks := []slack.Block{SingleTextSectionBlock(util.Markdown, text)}
+	return blocks
+}
+
+// メンバーデータエラー
+func GetErrBlocksMembersData(err error, dataErrType string) []slack.Block {
+	var text string
+	switch dataErrType {
+	case util.DataLoadErr:
+		text = "メンバーデータの読み込みに失敗しました"
+	case util.DataReloadErr:
+		text = "メンバーデータの更新に失敗しました"
+	default:
+		util.Logger.Fatalf("データエラータイプ %s は未定義です\n", dataErrType)
+	}
+
+	headerSection := SingleTextSectionBlock(util.PlainText, ErrText(text))
+	tipsSection := TipsSection(TipsDataError(util.MemberDataPath()))
+	blocks := []slack.Block{headerSection, tipsSection}
+
+	util.Logger.Println(text)
+	util.Logger.Println(err)
+	return blocks
+}
+
+// チームデータエラー
+func GetErrBlocksTeamsData(err error, dataErrType string) []slack.Block {
+	var text string
+	switch dataErrType {
+	case util.DataLoadErr:
+		text = "チームデータの読み込みに失敗しました"
+	case util.DataReloadErr:
+		text = "チームデータの更新に失敗しました"
+	default:
+		util.Logger.Fatalf("データエラータイプ %s は未定義です\n", dataErrType)
+	}
+
+	headerSection := SingleTextSectionBlock(util.PlainText, ErrText(text))
+	tipsSection := TipsSection(TipsDataError(util.TeamDataPath()))
+	blocks := []slack.Block{headerSection, tipsSection}
+
+	util.Logger.Println(text)
+	util.Logger.Println(err)
 	return blocks
 }

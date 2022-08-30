@@ -21,7 +21,7 @@ func getBlockAdd() (blocks []slack.Block) {
 
 	// メンバーデータ 読み込み
 	if md, err = data.LoadMember(); err != nil {
-		blocks = md.GetErrBlocks(err, util.DataLoadErr)
+		blocks = post.GetErrBlocksMembersData(err, util.DataLoadErr)
 		return blocks
 	}
 
@@ -63,10 +63,10 @@ func AddMember(actionUserID string, blockActions map[string]map[string]slack.Blo
 
 	// チーム・メンバー データ 読み込み
 	if td, err = data.LoadTeam(); err != nil {
-		return td.GetErrBlocks(err, util.DataLoadErr)
+		return post.GetErrBlocksMembersData(err, util.DataLoadErr)
 	}
 	if md, err = data.LoadMember(); err != nil {
-		return md.GetErrBlocks(err, util.DataLoadErr)
+		return post.GetErrBlocksTeamsData(err, util.DataLoadErr)
 	}
 
 	// ユーザID・所属チーム 取得
@@ -89,7 +89,10 @@ func AddMember(actionUserID string, blockActions map[string]map[string]slack.Blo
 	if teamName == "" {
 		blocks = post.SingleTextBlock(post.ErrText("チーム名が入力されていません"))
 	} else if idx := strings.Index(teamName, " "); idx >= 0 {
-		text := post.ErrText(fmt.Sprintf("チーム名にスペースを含めることはできません（%d文字目）", idx+1))
+		text := post.ErrText(fmt.Sprintf("チーム名に半角スペースを含めることはできません（%d文字目）", idx+1))
+		blocks = post.SingleTextBlock(text)
+	} else if idx := strings.Index(teamName, ","); idx >= 0 {
+		text := post.ErrText(fmt.Sprintf("チーム名に半角カンマを含めることはできません（%d文字目）", idx+1))
 		blocks = post.SingleTextBlock(text)
 	} else if util.ListContains(td.GetAllNames(), teamName) {
 		headerText := post.ErrText(fmt.Sprintf("指定したチーム名 `%s` は既に存在するため追加できません", teamName))
@@ -104,7 +107,7 @@ func AddMember(actionUserID string, blockActions map[string]map[string]slack.Blo
 		td.Add(teamName, teamUserIDs, actionUserID)
 
 		if err = td.Reload(); err != nil {
-			blocks = td.GetErrBlocks(err, util.DataReloadErr)
+			blocks = post.GetErrBlocksTeamsData(err, util.DataReloadErr)
 		} else {
 			if err := td.SynchronizeMember(); err != nil {
 				blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))
@@ -112,7 +115,7 @@ func AddMember(actionUserID string, blockActions map[string]map[string]slack.Blo
 				headerText := post.ScsText("*以下チームの追加に成功しました*")
 				headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
 				profImages := md.GetProfImages(teamUserIDs)
-				teamInfoSections := post.InfoTeamSections(teamName, teamName, profImages, teamUserIDs, []string{})
+				teamInfoSections := post.InfoTeamSections(teamName, teamName, profImages, teamUserIDs, []string{}, nil)
 				tipsText := []string{"続けてチームを追加したい場合，同じフォームを再利用できます"}
 				tipsSection := post.TipsSection(tipsText)
 

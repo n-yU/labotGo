@@ -6,20 +6,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/n-yU/labotGo/post"
 	"github.com/n-yU/labotGo/util"
-	"github.com/slack-go/slack"
 	"gopkg.in/yaml.v3"
 )
 
 // メンバー
 type MemberData struct {
-	TeamNames     []string  `yaml:"teams"`
-	Image24       string    `yaml:"image_24"`
-	Image32       string    `yaml:"image_32"`
-	Image48       string    `yaml:"image_48"`
-	CreatedUserID string    `yaml:"created_user"`
-	CreatedAt     time.Time `yaml:"created_at"`
+	TeamNames []string     `yaml:"teams"`
+	Image24   string       `yaml:"image_24"`
+	Image32   string       `yaml:"image_32"`
+	Image48   string       `yaml:"image_48"`
+	Created   *CreatedInfo `yaml:"created"`
 }
 
 // メンバーリスト
@@ -74,38 +71,18 @@ func (md MembersData) GetAllEditedUserIDs() (userIDs []string) {
 	return userIDs
 }
 
-// メンバーデータエラー
-func (md MembersData) GetErrBlocks(err error, dataErrType string) []slack.Block {
-	var text string
-	switch dataErrType {
-	case util.DataLoadErr:
-		text = "メンバーデータの読み込みに失敗しました"
-	case util.DataReloadErr:
-		text = "メンバーデータの更新に失敗しました"
-	default:
-		util.Logger.Fatalf("データエラータイプ %s は未定義です\n", dataErrType)
-	}
-
-	headerSection := post.SingleTextSectionBlock(util.PlainText, post.ErrText(text))
-	tipsSection := post.TipsSection(post.TipsDataError(util.MemberDataPath()))
-	blocks := []slack.Block{headerSection, tipsSection}
-
-	util.Logger.Println(text)
-	util.Logger.Println(err)
-	return blocks
-}
-
 // メンバーデータによるチームデータの同期
 func (md MembersData) SynchronizeTeam() error {
 	if oldTd, err := LoadTeam(); err != nil {
 		return err
 	} else {
+		// 所属メンバーを持たないチームが存在するため，更新前のチームデータから各チームデータを予めコピー
 		newTd := TeamsData{}
+		for _, teamName := range oldTd.GetAllNames() {
+			newTd[teamName] = NewTeam([]string{}, oldTd[teamName].Created)
+		}
 		for userID, member := range md {
 			for _, teamName := range member.TeamNames {
-				if _, ok := newTd[teamName]; !ok {
-					newTd[teamName] = NewTeam([]string{}, oldTd[teamName].CreatedUserID)
-				}
 				newTd[teamName].UserIDs = append(newTd[teamName].UserIDs, userID)
 			}
 		}
@@ -116,7 +93,7 @@ func (md MembersData) SynchronizeTeam() error {
 }
 
 // 新規メンバー
-func NewMember(userID string, teamNames []string, createdUserID string, createdAt time.Time) (m *MemberData) {
+func NewMember(userID string, teamNames []string, created *CreatedInfo) (m *MemberData) {
 	if prof, err := util.SocketModeClient.GetUserInfo(userID); err != nil {
 		util.Logger.Printf("ユーザ \"%s\" のプロフィール取得に失敗しました", userID)
 		util.Logger.Println(err)
@@ -124,7 +101,7 @@ func NewMember(userID string, teamNames []string, createdUserID string, createdA
 		m = &MemberData{
 			TeamNames: teamNames, Image24: prof.Profile.Image24,
 			Image32: prof.Profile.Image32, Image48: prof.Profile.Image48,
-			CreatedUserID: createdUserID, CreatedAt: createdAt,
+			Created: NewCreatedInfo(created.UserID, created.At),
 		}
 	}
 	return m
@@ -132,13 +109,13 @@ func NewMember(userID string, teamNames []string, createdUserID string, createdA
 
 // メンバー追加
 func (md MembersData) Add(userID string, teamNames []string, actionUserID string) {
-	md[userID] = NewMember(userID, teamNames, actionUserID, time.Now())
+	md[userID] = NewMember(userID, teamNames, NewCreatedInfo(actionUserID, time.Now()))
 }
 
 // メンバー更新
 func (md MembersData) Update(userID string, newTeamNames []string, actionUserID string) []string {
-	oldTeamNames, createdUserID := md[userID].TeamNames, md[userID].CreatedUserID
-	md[userID] = NewMember(userID, newTeamNames, createdUserID, md[userID].CreatedAt)
+	oldTeamNames, createdUserID := md[userID].TeamNames, md[userID].Created.UserID
+	md[userID] = NewMember(userID, newTeamNames, NewCreatedInfo(createdUserID, md[userID].Created.At))
 	return oldTeamNames
 }
 

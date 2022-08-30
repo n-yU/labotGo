@@ -24,10 +24,10 @@ func getBlockListTeam(values []string) (blocks []slack.Block) {
 
 	// チーム・メンバー データ 読み込み
 	if td, err = data.LoadTeam(); err != nil {
-		return td.GetErrBlocks(err, util.DataLoadErr)
+		return post.GetErrBlocksTeamsData(err, util.DataLoadErr)
 	}
 	if md, err = data.LoadMember(); err != nil {
-		return md.GetErrBlocks(err, util.DataLoadErr)
+		return post.GetErrBlocksMembersData(err, util.DataLoadErr)
 	}
 
 	if len(values) > 1 {
@@ -65,12 +65,15 @@ func getBlockListTeam(values []string) (blocks []slack.Block) {
 			}
 			// ブロック: チーム情報
 			teamUserIDs := td[teamName].UserIDs
-			profImages := md.GetProfImages(teamUserIDs)
-			teamInfoSections := post.InfoTeamSections(teamName, teamName, profImages, teamUserIDs, teamUserIDs)
+			teamInfoSections := post.InfoTeamSections(
+				teamName, teamName, md.GetProfImages(teamUserIDs),
+				teamUserIDs, teamUserIDs, td[teamName].Created,
+			)
 
 			for _, teamInfoSec := range teamInfoSections {
 				blocks = append(blocks, teamInfoSec)
 			}
+			blocks = append(blocks, util.Divider())
 		}
 
 		if len(unknownTeams) > 0 {

@@ -21,10 +21,10 @@ func getBlockAdd() []slack.Block {
 
 	// メンバー・チームデータ 読み込み
 	if md, err = data.LoadMember(); err != nil {
-		return md.GetErrBlocks(err, util.DataLoadErr)
+		return post.GetErrBlocksMembersData(err, util.DataLoadErr)
 	}
 	if td, err = data.LoadTeam(); err != nil {
-		return td.GetErrBlocks(err, util.DataLoadErr)
+		return post.GetErrBlocksTeamsData(err, util.DataLoadErr)
 	}
 
 	// ブロック: ヘッダ
@@ -61,7 +61,7 @@ func AddMember(actionUserID string, blockActions map[string]map[string]slack.Blo
 
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
-		blocks = md.GetErrBlocks(err, util.DataLoadErr)
+		blocks = post.GetErrBlocksMembersData(err, util.DataLoadErr)
 	} else {
 		var (
 			userID    string
@@ -103,18 +103,18 @@ func AddMember(actionUserID string, blockActions map[string]map[string]slack.Blo
 			md.Add(userID, teamNames, actionUserID)
 
 			if err = md.Reload(); err != nil {
-				blocks = md.GetErrBlocks(err, util.DataReloadErr)
+				blocks = post.GetErrBlocksMembersData(err, util.DataReloadErr)
 			} else {
 				if err := md.SynchronizeTeam(); err != nil {
 					blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))
 				} else {
 					headerText := post.ScsText("*以下ユーザのメンバー追加に成功しました*")
 					headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
-					memberInfoSection := post.InfoMemberSection(md[userID].Image24, userID, teamNames, teamNames)
+					memberInfoSections := post.InfoMemberSection(md[userID].Image24, userID, teamNames, teamNames, nil)
 					tipsText := []string{"続けてメンバーを追加したい場合，同じフォームを再利用できます"}
 					tipsSection := post.TipsSection(tipsText)
 
-					blocks, ok = []slack.Block{headerSection, memberInfoSection, tipsSection}, true
+					blocks, ok = []slack.Block{headerSection, memberInfoSections[0], tipsSection}, true
 					util.Logger.Println("メンバー編集に成功しました")
 				}
 			}

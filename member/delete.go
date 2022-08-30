@@ -16,7 +16,7 @@ import (
 func getBlockDeleteMemberSelect() (blocks []slack.Block) {
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
-		blocks = md.GetErrBlocks(err, util.DataLoadErr)
+		blocks = post.GetErrBlocksMembersData(err, util.DataLoadErr)
 	} else {
 		// ブロック: ヘッダ
 		headerText := post.InfoText("*削除したいユーザを選択してください*")
@@ -38,7 +38,7 @@ func DeleteMemberConfirm(actionUserID string, blockActions map[string]map[string
 
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
-		blocks = md.GetErrBlocks(err, util.DataLoadErr)
+		blocks = post.GetErrBlocksMembersData(err, util.DataLoadErr)
 	} else {
 		// ユーザID・チームリスト 取得
 		var userID string
@@ -55,11 +55,11 @@ func DeleteMemberConfirm(actionUserID string, blockActions map[string]map[string
 		util.Logger.Printf("ユーザID: %s / チームリスト: %v\n", userID, memberTeamNames)
 
 		headerSection := post.SingleTextSectionBlock(util.Markdown, "*以下メンバーを削除しますか？*")
-		memberInfoSection := post.InfoMemberSection(md[userID].Image24, userID, memberTeamNames, memberTeamNames)
+		memberInfoSections := post.InfoMemberSection(md[userID].Image24, userID, memberTeamNames, memberTeamNames, nil)
 		actionBtnActionId := strings.Join([]string{aid.DeleteMember, userID}, "_")
 		actionBtnBlock := post.BtnOK("削除", actionBtnActionId)
 
-		blocks = []slack.Block{headerSection, memberInfoSection, actionBtnBlock}
+		blocks = []slack.Block{headerSection, memberInfoSections[0], actionBtnBlock}
 	}
 
 	return blocks
@@ -71,13 +71,13 @@ func DeleteMember(actionUserID string, blockActions map[string]map[string]slack.
 
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
-		blocks = md.GetErrBlocks(err, util.DataLoadErr)
+		blocks = post.GetErrBlocksTeamsData(err, util.DataLoadErr)
 	} else {
 		// メンバー削除
 		md.Delete(userID)
 
 		if err = md.Reload(); err != nil {
-			blocks = md.GetErrBlocks(err, util.DataReloadErr)
+			blocks = post.GetErrBlocksMembersData(err, util.DataReloadErr)
 		} else {
 			if err := md.SynchronizeTeam(); err != nil {
 				blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))
