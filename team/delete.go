@@ -16,7 +16,7 @@ import (
 func getBlockDeleteTeamSelect() (blocks []slack.Block) {
 	// チームデータ 読み込み
 	if td, err := data.LoadTeam(); err != nil {
-		blocks = post.GetErrBlocksTeamsData(err, util.DataLoadErr)
+		blocks = post.ErrBlocksTeamsData(err, util.DataLoadErr)
 	} else {
 		// ブロック: ヘッダ
 		headerText := post.InfoText("*削除したいチームを選択してください*")
@@ -43,10 +43,10 @@ func DeleteTeamConfirm(actionUserID string, blockActions map[string]map[string]s
 
 	// チーム・メンバーデータ 読み込み
 	if td, err = data.LoadTeam(); err != nil {
-		return post.GetErrBlocksTeamsData(err, util.DataLoadErr)
+		return post.ErrBlocksTeamsData(err, util.DataLoadErr)
 	}
 	if md, err = data.LoadMember(); err != nil {
-		return post.GetErrBlocksMembersData(err, util.DataLoadErr)
+		return post.ErrBlocksMembersData(err, util.DataLoadErr)
 	}
 
 	var teamName string
@@ -83,13 +83,13 @@ func DeleteTeam(actionUserID string, blockActions map[string]map[string]slack.Bl
 
 	// チームデータ 読み込み
 	if td, err := data.LoadTeam(); err != nil {
-		blocks = post.GetErrBlocksTeamsData(err, util.DataLoadErr)
+		blocks = post.ErrBlocksTeamsData(err, util.DataLoadErr)
 	} else {
 		// チーム削除
 		td.Delete(teamName)
 
 		if err = td.Reload(); err != nil {
-			blocks = post.GetErrBlocksTeamsData(err, util.DataReloadErr)
+			blocks = post.ErrBlocksTeamsData(err, util.DataReloadErr)
 		} else {
 			if err := td.SynchronizeMember(); err != nil {
 				blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))

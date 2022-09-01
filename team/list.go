@@ -24,10 +24,10 @@ func getBlockListTeam(values []string) (blocks []slack.Block) {
 
 	// チーム・メンバー データ 読み込み
 	if td, err = data.LoadTeam(); err != nil {
-		return post.GetErrBlocksTeamsData(err, util.DataLoadErr)
+		return post.ErrBlocksTeamsData(err, util.DataLoadErr)
 	}
 	if md, err = data.LoadMember(); err != nil {
-		return post.GetErrBlocksMembersData(err, util.DataLoadErr)
+		return post.ErrBlocksMembersData(err, util.DataLoadErr)
 	}
 
 	if len(values) > 1 {

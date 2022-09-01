@@ -18,6 +18,7 @@
 - [【Go】スライスから重複を排除し、ユニークなスライスを作成する方法](https://zenn.dev/orangekame/articles/dad6d0e9382660)
 - [Go で実行ファイルのパスを取得 - Qiita](https://qiita.com/summer/items/2674a178ffe6acb895fb)
 - [GoでJSTのタイムゾーンを扱う方法 - 技術メモ](https://tutuz-tech.hatenablog.com/entry/2021/01/30/192956)
+- [golang で汎用的な任意数のオプションを取るメソッドの作り方 | Hori Blog](https://hori-ryota.com/blog/golang-highly-versatile-method-with-arbitary-options/)
 
 ## slack-go
 - [slack-go/slack: Slack API in Go - community-maintained fork created by the original author, @nlopes](https://github.com/slack-go/slack)

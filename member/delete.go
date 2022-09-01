@@ -16,7 +16,7 @@ import (
 func getBlockDeleteMemberSelect() (blocks []slack.Block) {
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
-		blocks = post.GetErrBlocksMembersData(err, util.DataLoadErr)
+		blocks = post.ErrBlocksMembersData(err, util.DataLoadErr)
 	} else {
 		// ブロック: ヘッダ
 		headerText := post.InfoText("*削除したいユーザを選択してください*")
@@ -38,7 +38,7 @@ func DeleteMemberConfirm(actionUserID string, blockActions map[string]map[string
 
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
-		blocks = post.GetErrBlocksMembersData(err, util.DataLoadErr)
+		blocks = post.ErrBlocksMembersData(err, util.DataLoadErr)
 	} else {
 		// ユーザID・チームリスト 取得
 		var userID string
@@ -71,13 +71,13 @@ func DeleteMember(actionUserID string, blockActions map[string]map[string]slack.
 
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
-		blocks = post.GetErrBlocksTeamsData(err, util.DataLoadErr)
+		blocks = post.ErrBlocksMembersData(err, util.DataLoadErr)
 	} else {
 		// メンバー削除
 		md.Delete(userID)
 
 		if err = md.Reload(); err != nil {
-			blocks = post.GetErrBlocksMembersData(err, util.DataReloadErr)
+			blocks = post.ErrBlocksMembersData(err, util.DataReloadErr)
 		} else {
 			if err := md.SynchronizeTeam(); err != nil {
 				blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))

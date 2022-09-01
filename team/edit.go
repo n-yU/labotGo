@@ -16,7 +16,7 @@ import (
 func getBlockEditTeamSelect() (blocks []slack.Block) {
 	// チームデータ 読み込み
 	if td, err := data.LoadTeam(); err != nil {
-		blocks = post.GetErrBlocksTeamsData(err, util.DataLoadErr)
+		blocks = post.ErrBlocksTeamsData(err, util.DataLoadErr)
 	} else {
 		// ブロック: ヘッダ
 		headerText := post.InfoText("*編集したいチームを選択してください*")
@@ -35,7 +35,7 @@ func getBlockEditTeamSelect() (blocks []slack.Block) {
 }
 
 // チーム編集リクエスト（チーム名入力・メンバー選択）
-func getBlockEditTeamInfo(actionUserID string, blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
+func getBlockEditTeamInfo(actionUserID string, blockActions map[string]map[string]slack.BlockAction) []slack.Block {
 	var (
 		md  data.MembersData
 		td  data.TeamsData
@@ -44,12 +44,10 @@ func getBlockEditTeamInfo(actionUserID string, blockActions map[string]map[strin
 
 	// メンバー・チームデータ 読み込み
 	if md, err = data.LoadMember(); err != nil {
-		blocks = post.GetErrBlocksMembersData(err, util.DataLoadErr)
-		return blocks
+		return post.ErrBlocksMembersData(err, util.DataLoadErr)
 	}
 	if td, err = data.LoadTeam(); err != nil {
-		blocks = post.GetErrBlocksTeamsData(err, util.DataLoadErr)
-		return blocks
+		return post.ErrBlocksTeamsData(err, util.DataLoadErr)
 	}
 
 	// 変更前チーム名／メンバーリスト 取得
@@ -80,7 +78,7 @@ func getBlockEditTeamInfo(actionUserID string, blockActions map[string]map[strin
 	actionBtnActionId := strings.Join([]string{aid.EditTeam, teamName}, "_")
 	actionBtnBlock := post.BtnOK("変更", actionBtnActionId)
 
-	blocks = []slack.Block{headerSection, headerTipsSection, util.Divider(), nameSection, membersSection, actionBtnBlock}
+	blocks := []slack.Block{headerSection, headerTipsSection, util.Divider(), nameSection, membersSection, actionBtnBlock}
 	return blocks
 }
 
@@ -98,10 +96,10 @@ func EditTeam(actionUserID string, blockActions map[string]map[string]slack.Bloc
 
 	// チーム・メンバー データ 読み込み
 	if td, err = data.LoadTeam(); err != nil {
-		return post.GetErrBlocksTeamsData(err, util.DataLoadErr)
+		return post.ErrBlocksTeamsData(err, util.DataLoadErr)
 	}
 	if md, err = data.LoadMember(); err != nil {
-		return post.GetErrBlocksMembersData(err, util.DataLoadErr)
+		return post.ErrBlocksMembersData(err, util.DataLoadErr)
 	}
 
 	// チーム名・所属メンバー 取得
@@ -140,7 +138,7 @@ func EditTeam(actionUserID string, blockActions map[string]map[string]slack.Bloc
 		oldUserIDs := td.Update(oldTeamName, newTeamName, newUserIDs, actionUserID)
 
 		if err = td.Reload(); err != nil {
-			blocks = post.GetErrBlocksTeamsData(err, util.DataReloadErr)
+			blocks = post.ErrBlocksTeamsData(err, util.DataReloadErr)
 		} else {
 			if err := td.SynchronizeMember(); err != nil {
 				blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))

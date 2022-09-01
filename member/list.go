@@ -17,7 +17,7 @@ func getBlockListMember() (blocks []slack.Block) {
 
 	// メンバーデータ 読み込み
 	if md, err := data.LoadMember(); err != nil {
-		blocks = post.GetErrBlocksMembersData(err, util.DataLoadErr)
+		blocks = post.ErrBlocksMembersData(err, util.DataLoadErr)
 	} else {
 		// ブロック: ヘッダ
 		headerText := post.InfoText(fmt.Sprintf("*labotGo に追加されている全メンバー（%d人）は以下の通りです*", len(md)))

@@ -8,6 +8,7 @@ import (
 	"github.com/n-yU/labotGo/aid"
 	"github.com/n-yU/labotGo/member"
 	"github.com/n-yU/labotGo/post"
+	"github.com/n-yU/labotGo/shuffle"
 	"github.com/n-yU/labotGo/team"
 	"github.com/n-yU/labotGo/util"
 	"github.com/slack-go/slack"
@@ -48,25 +49,30 @@ func Command(cmd slack.SlashCommand) error {
 			text := "*Hello, World!*"
 			blocks, responseType, ok = post.SingleTextBlock(text), util.InChannel, true
 		} else {
-			text := post.ErrText(fmt.Sprintf("%s *%s* に引数を与えることはできません\n", util.Cmd, cmdType))
+			text := post.ErrText(fmt.Sprintf("%s *%s* に引数を与えることはできません", util.Cmd, cmdType))
 			blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
 		}
 	case "member":
 		if isEmptyValues {
-			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります\n", util.Cmd, cmdType))
+			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります", util.Cmd, cmdType))
 			blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
 		} else {
 			blocks, responseType, ok = member.GetBlocks(cmdValues)
 		}
 	case "team":
 		if isEmptyValues {
-			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります\n", util.Cmd, cmdType))
+			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります", util.Cmd, cmdType))
 			blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
 		} else {
 			blocks, responseType, ok = team.GetBlocks(cmdValues)
 		}
 	case "shuffle":
-
+		if isEmptyValues {
+			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります", util.Cmd, cmdType))
+			blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
+		} else {
+			blocks, responseType, ok = shuffle.GetBlocks(cmdValues)
+		}
 	case "group":
 
 	default:

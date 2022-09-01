@@ -258,8 +258,8 @@ func SingleTextBlock(text string) []slack.Block {
 	return blocks
 }
 
-// メンバーデータエラー
-func GetErrBlocksMembersData(err error, dataErrType string) []slack.Block {
+// 頻用ブロック: メンバーデータエラー
+func ErrBlocksMembersData(err error, dataErrType string) []slack.Block {
 	var text string
 	switch dataErrType {
 	case util.DataLoadErr:
@@ -279,8 +279,8 @@ func GetErrBlocksMembersData(err error, dataErrType string) []slack.Block {
 	return blocks
 }
 
-// チームデータエラー
-func GetErrBlocksTeamsData(err error, dataErrType string) []slack.Block {
+// 頻用ブロック: チームデータエラー
+func ErrBlocksTeamsData(err error, dataErrType string) []slack.Block {
 	var text string
 	switch dataErrType {
 	case util.DataLoadErr:
@@ -297,5 +297,16 @@ func GetErrBlocksTeamsData(err error, dataErrType string) []slack.Block {
 
 	util.Logger.Println(text)
 	util.Logger.Println(err)
+	return blocks
+}
+
+// 頻用ブロック: 未定義チーム指定エラー
+func ErrBlocksUnknownTeam(teamName string) []slack.Block {
+	text := ErrText(fmt.Sprintf("指定したチーム `%s` は存在しません", teamName))
+	textSection := SingleTextSectionBlock(util.Markdown, text)
+	tipsText := []string{fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください", util.Cmd)}
+	tipsSection := TipsSection(tipsText)
+
+	blocks := []slack.Block{textSection, tipsSection}
 	return blocks
 }
