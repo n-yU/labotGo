@@ -67,7 +67,8 @@ func (td TeamsData) GetAllEditedNames() (teamName []string) {
 }
 
 // 複合チームメンバー 取得
-func (td TeamsData) GetComplexTeamMemberUserIDs(teamNames []string) (memberUserIDs []string, err error) {
+func (td TeamsData) GetComplexTeamMemberUserIDs(teamNames []string) (uniqueMemberUserIDs []string, err error) {
+	var memberUserIDs []string
 	for _, teamName := range teamNames {
 		if team, ok := td[teamName]; ok {
 			for _, userID := range team.UserIDs {
@@ -77,7 +78,8 @@ func (td TeamsData) GetComplexTeamMemberUserIDs(teamNames []string) (memberUserI
 			err = errors.New(fmt.Sprintf("指定したチーム `%s` は存在しません", teamName))
 		}
 	}
-	return memberUserIDs, err
+	uniqueMemberUserIDs = util.UniqueSlice(memberUserIDs)
+	return uniqueMemberUserIDs, err
 }
 
 // チームデータによるメンバーデータの同期

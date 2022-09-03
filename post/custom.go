@@ -10,22 +10,22 @@ import (
 	"github.com/slack-go/slack"
 )
 
-// 頻用テキスト: エラー
+// 定型テキスト: エラー
 func ErrText(text string) string {
 	return fmt.Sprintf(":x: %s", text)
 }
 
-// 頻用テキスト: 成功
+// 定型テキスト: 成功
 func ScsText(text string) string {
 	return fmt.Sprintf(":white_check_mark: %s", text)
 }
 
-// 頻用テキスト: 情報
+// 定型テキスト: 情報
 func InfoText(text string) string {
 	return fmt.Sprintf(":diamond_shape_with_a_dot_inside: %s", text)
 }
 
-// 頻用テキスト: データファイルエラー Tips
+// 定型テキスト: データファイルエラー Tips
 func TipsDataError(dataPath string) []string {
 	return []string{
 		fmt.Sprintf("データファイル `%s` が存在しないか，ファイル／データ形式が不適切です", dataPath),
@@ -33,7 +33,7 @@ func TipsDataError(dataPath string) []string {
 	}
 }
 
-// 頻用ブロック要素: スタイル指定有ボタン
+// 定型ブロック要素: スタイル指定有ボタン
 func NewButtonBlockElementWithStyle(actionID, value string, text *slack.TextBlockObject, style slack.Style) *slack.ButtonBlockElement {
 	// ref.) https://github.com/slack-go/slack/blob/03f86be11aa50ac65d66f3917e250d3257389028/block_element.go#L176
 	return &slack.ButtonBlockElement{
@@ -45,12 +45,12 @@ func NewButtonBlockElementWithStyle(actionID, value string, text *slack.TextBloc
 	}
 }
 
-// 頻用ブロックオブジェクト: slack.NewTextBlockObject()
+// 定型ブロックオブジェクト: slack.NewTextBlockObject()
 func TxtBlockObj(elementType string, text string) *slack.TextBlockObject {
 	return slack.NewTextBlockObject(elementType, text, false, false)
 }
 
-// 頻用ブロックオブジェクト: Option オブジェクトリスト
+// 定型ブロックオブジェクト: Option オブジェクトリスト
 func OptionBlockObjectList(options []string, isUser bool) []*slack.OptionBlockObject {
 	// ref.) https://github.com/slack-go/slack/blob/03f86be11aa50ac65d66f3917e250d3257389028/examples/modal_users/users.go#L92
 	optionBlockObjects := []*slack.OptionBlockObject{}
@@ -69,12 +69,12 @@ func OptionBlockObjectList(options []string, isUser bool) []*slack.OptionBlockOb
 	return optionBlockObjects
 }
 
-// 頻用セクション: slack.NewSectionBlock(TxtBlockObj(), nil, nil)
+// 定型セクション: slack.NewSectionBlock(TxtBlockObj(), nil, nil)
 func SingleTextSectionBlock(elementType string, text string) *slack.SectionBlock {
 	return slack.NewSectionBlock(TxtBlockObj(elementType, text), nil, nil)
 }
 
-// 頻用セクション: Tips
+// 定型セクション: Tips
 func TipsSection(tips []string) *slack.ContextBlock {
 	elements := make([]slack.MixedElement, 0, len(tips))
 	for _, str := range tips {
@@ -86,7 +86,7 @@ func TipsSection(tips []string) *slack.ContextBlock {
 	return tipsSection
 }
 
-// 頻用セクション: OKボタン
+// 定型セクション: OKボタン
 func BtnOK(text string, actionID string) *slack.ActionBlock {
 	btnText := TxtBlockObj(util.PlainText, text)
 	btn := NewButtonBlockElementWithStyle(actionID, "", btnText, slack.StylePrimary)
@@ -94,7 +94,7 @@ func BtnOK(text string, actionID string) *slack.ActionBlock {
 	return btnBlock
 }
 
-// 頻用セクション: メンバー選択
+// 定型セクション: メンバー選択
 func SelectMembersSection(userIDs []string, actionID string, initUserIDs []string, isMulti, isMember bool) *slack.SectionBlock {
 	var selectOptionType, text string
 	if isMulti {
@@ -118,7 +118,7 @@ func SelectMembersSection(userIDs []string, actionID string, initUserIDs []strin
 	return selectSection
 }
 
-// 頻用セクション: チーム選択
+// 定型セクション: チーム選択
 func SelectTeamsSection(teamNames []string, actionID string, initTeamNames []string, isMulti bool) *slack.SectionBlock {
 	var selectOptionType string
 	if isMulti {
@@ -137,7 +137,7 @@ func SelectTeamsSection(teamNames []string, actionID string, initTeamNames []str
 	return selectSection
 }
 
-// 頻用セクション: メンバー情報
+// 定型セクション: メンバー情報
 func InfoMemberSection(
 	profImage, userID string, newTeamNames, oldTeamNames []string, createdInfo *data.CreatedInfo,
 ) []*slack.ContextBlock {
@@ -180,7 +180,7 @@ func InfoMemberSection(
 	return infoSections
 }
 
-// 頻用セクション: チーム情報
+// 定型セクション: チーム情報
 func InfoTeamSections(
 	newTeamName, oldTeamName string, profImages map[string]string, newUserIDs, oldUserIDs []string, createdInfo *data.CreatedInfo,
 ) (infoSections []*slack.ContextBlock) {
@@ -239,7 +239,7 @@ func InfoTeamSections(
 	return infoSections
 }
 
-// 頻用セクション: チーム名入力
+// 定型セクション: チーム名入力
 func InputTeamNameSection(actionID string, initTeamName string) *slack.InputBlock {
 	inputSectionText := TxtBlockObj(util.PlainText, "チーム名")
 	inputSectionHint := TxtBlockObj(util.PlainText, "1〜20文字で入力してください ／ 半角スペース・半角カンマは使用できません")
@@ -252,13 +252,13 @@ func InputTeamNameSection(actionID string, initTeamName string) *slack.InputBloc
 	return inputSection
 }
 
-// 頻用ブロック: シングルテキスト
+// 定型ブロック: シングルテキスト
 func SingleTextBlock(text string) []slack.Block {
 	blocks := []slack.Block{SingleTextSectionBlock(util.Markdown, text)}
 	return blocks
 }
 
-// 頻用ブロック: メンバーデータエラー
+// 定型ブロック: メンバーデータエラー
 func ErrBlocksMembersData(err error, dataErrType string) []slack.Block {
 	var text string
 	switch dataErrType {
@@ -279,7 +279,7 @@ func ErrBlocksMembersData(err error, dataErrType string) []slack.Block {
 	return blocks
 }
 
-// 頻用ブロック: チームデータエラー
+// 定型ブロック: チームデータエラー
 func ErrBlocksTeamsData(err error, dataErrType string) []slack.Block {
 	var text string
 	switch dataErrType {
@@ -300,7 +300,7 @@ func ErrBlocksTeamsData(err error, dataErrType string) []slack.Block {
 	return blocks
 }
 
-// 頻用ブロック: 未定義チーム指定エラー
+// 定型ブロック: 未定義チーム指定エラー
 func ErrBlocksUnknownTeam(teamName string) []slack.Block {
 	text := ErrText(fmt.Sprintf("指定したチーム `%s` は存在しません", teamName))
 	textSection := SingleTextSectionBlock(util.Markdown, text)

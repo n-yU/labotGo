@@ -64,7 +64,7 @@ func getBlocksShuffle(teamNamesString string) ([]slack.Block, string) {
 		}
 
 		// シャッフル結果セクション 追加
-		shuffleResultSections := getShuffleResultSections(teamName, shuffledMemberUIDs, md)
+		shuffleResultSections := shuffleResultSections(teamName, shuffledMemberUIDs, md)
 		for _, shuffleResSec := range shuffleResultSections {
 			blocks = append(blocks, shuffleResSec)
 		}
@@ -104,17 +104,7 @@ func getTeamsMembers(teamNamesString string) (memberUserIDs map[string][]string,
 			// 複合チーム指定
 			teamNames := util.UniqueSlice(strings.Split(teamNamesString, "+"))
 			complexTeamName := strings.Join(teamNames, "+")
-			memberUserIDs[complexTeamName] = []string{}
-			for _, teamName := range teamNames {
-				if team, ok := td[teamName]; ok {
-					for _, userID := range team.UserIDs {
-						memberUserIDs[complexTeamName] = append(memberUserIDs[complexTeamName], userID)
-					}
-				} else {
-					blocks = post.ErrBlocksUnknownTeam(teamName)
-				}
-			}
-			memberUserIDs[complexTeamName] = util.UniqueSlice(memberUserIDs[complexTeamName])
+			memberUserIDs[complexTeamName], _ = td.GetComplexTeamMemberUserIDs(teamNames)
 		} else {
 			// 単独チーム指定
 			memberUserIDs[teamNamesString] = []string{}
@@ -125,6 +115,15 @@ func getTeamsMembers(teamNamesString string) (memberUserIDs map[string][]string,
 			} else {
 				blocks = post.ErrBlocksUnknownTeam(teamNamesString)
 			}
+		}
+	}
+
+	// チームメンバー有無 チェック
+	for teamName, userIDs := range memberUserIDs {
+		if len(userIDs) == 0 {
+			text := post.ErrText(fmt.Sprintf("指定したチーム `%s` のメンバー数が 0人 のため，シャッフルできません", teamName))
+			blocks = post.SingleTextBlock(text)
+			break
 		}
 	}
 
@@ -149,8 +148,8 @@ func ShuffleMemberUserIDs(userIDs []string) (shuffledUserIDs []string) {
 	return shuffledUserIDs
 }
 
-// シャッフル結果セクション 取得
-func getShuffleResultSections(
+// 定型セクション: シャッフル結果
+func shuffleResultSections(
 	teamName string, memberUserIDs []string, md data.MembersData,
 ) (resultSections []*slack.ContextBlock) {
 	teamNameElements := []slack.MixedElement{post.TxtBlockObj(util.Markdown, fmt.Sprintf("チーム名: *%s*", teamName))}

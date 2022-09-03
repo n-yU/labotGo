@@ -9,7 +9,6 @@ import (
 	"github.com/n-yU/labotGo/aid"
 	"github.com/n-yU/labotGo/data"
 	"github.com/n-yU/labotGo/post"
-	"github.com/n-yU/labotGo/shuffle"
 	"github.com/n-yU/labotGo/util"
 	"github.com/slack-go/slack"
 )
@@ -28,7 +27,7 @@ func getBlocksTeam() []slack.Block {
 		// ブロック: ヘッダ Tips
 		headerTipsText := []string{
 			util.TipsTeamList(), "チームを複数選択した場合，複合チームでグルーピングされます",
-			"グループ*サイズ*指定時の注意: `/lab help group-size`",
+			"グループ *サイズ* 指定時の注意: `/lab help group-size`",
 		}
 		headerTipsSection := post.TipsSection(headerTipsText)
 
@@ -36,22 +35,10 @@ func getBlocksTeam() []slack.Block {
 		teamsSelectSection := post.SelectTeamsSection(td.GetAllNames(), aid.GroupTeamSelectNames, []string{}, true)
 
 		// ブロック: グルーピングタイプ選択
-		typeOptions := post.OptionBlockObjectList([]string{util.GroupTypeOptionNum, util.GroupTypeOptionSize}, false)
-		typeSelectOptionText := post.TxtBlockObj(util.PlainText, "グルーピングタイプを選択")
-		typeSelectOption := slack.NewOptionsSelectBlockElement(
-			slack.OptTypeStatic, typeSelectOptionText, aid.GroupTeamSelectType, typeOptions...,
-		)
-		typeSelectText := post.TxtBlockObj(util.Markdown, "*グルーピングタイプ*")
-		typeSelectSection := slack.NewSectionBlock(typeSelectText, nil, slack.NewAccessory(typeSelectOption))
+		typeSelectSection := TypeSelectSection(aid.GroupTeamSelectType)
 
 		// ブロック: グルーピングバリュー入力
-		valueInputSectionText := post.TxtBlockObj(util.PlainText, "グループ数・グループサイズ")
-		valueInputSectionHint := post.TxtBlockObj(
-			util.PlainText, "指定グループのメンバー数以下の自然数を入力してください\nグループサイズを指定する場合は末尾に +/- を付けてください",
-		)
-		valueInputText := post.TxtBlockObj(util.PlainText, "グループ数・グループサイズを入力")
-		valueInput := slack.NewPlainTextInputBlockElement(valueInputText, aid.GroupTeamInputValue)
-		valueInputSection := slack.NewInputBlock("", valueInputSectionText, valueInputSectionHint, valueInput)
+		valueInputSection := ValueInputSection(aid.GroupTeamInputValue)
 
 		// ブロック: グルーピングボタン
 		actionBtnBlock := post.BtnOK("グルーピング", aid.GroupTeam)
@@ -107,23 +94,8 @@ func GroupTeam(
 	util.Logger.Printf("チームリスト: %v / グルーピングタイプ: %s / グループングバリュー: %s\n", teamNames, groupType, groupValue)
 
 	// 欠損値チェック
-	isEmptyTeamNames := (len(teamNames) == 0)
-	isEmptyGroupType, isEmptyGroupValue := (groupType == ""), (groupValue == "")
-
-	if isEmptyTeamNames || isEmptyGroupType || isEmptyGroupValue {
-		emptyElements := []string{}
-		if isEmptyTeamNames {
-			emptyElements = append(emptyElements, "チーム")
-		}
-		if isEmptyGroupType {
-			emptyElements = append(emptyElements, "タイプ")
-		}
-		if isEmptyGroupValue {
-			emptyElements = append(emptyElements, "グループ数・グループサイズ")
-		}
-		blocks = post.SingleTextBlock(post.ErrText(fmt.Sprintf(
-			"%s が指定されていません", strings.Join(emptyElements, "／"),
-		)))
+	blocks = CheckMissingValue(teamNames, groupType, groupValue, false)
+	if len(blocks) > 0 {
 		return blocks, util.Ephemeral
 	}
 
@@ -135,7 +107,6 @@ func GroupTeam(
 	groupValueInt, groupValueErr := strconv.Atoi(groupValue[:len(groupValue)-1])
 	groupValueOption := string(groupValue[len(groupValue)-1])
 	memberUserIDs, _ := td.GetComplexTeamMemberUserIDs(teamNames)
-	memberUserIDs = util.UniqueSlice(memberUserIDs)
 	teamNamesString := strings.Join(teamNames, " + ")
 
 	if len(memberUserIDs) == 0 {
@@ -156,90 +127,17 @@ func GroupTeam(
 		)))
 	} else if groupValueInt > len(memberUserIDs) {
 		blocks = post.SingleTextBlock(post.ErrText(fmt.Sprintf(
-			"グループ数・グループサイズ `%d` が指定グループのメンバー数 `%d` を超えています", groupValueInt, len(memberUserIDs),
+			"グループ数・グループサイズ `%d` は指定グループのメンバー数 `%d` を超えています", groupValueInt, len(memberUserIDs),
 		)))
 	} else {
-		shuffledMemberUIDs := shuffle.ShuffleMemberUserIDs(memberUserIDs)
-
-		switch groupType {
-		case util.GroupTypeOptionNum:
-			// タイプ: グループ数指定
-			headerText := post.ScsText(fmt.Sprintf(
-				"指定チーム *%s* を *グループ数=%d* でグルーピングしました", teamNamesString, groupValueInt,
-			))
-			headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
-			blocks = []slack.Block{headerSection, util.Divider()}
-
-			// 各メンバー グループ割当
-			groupsUserIDs := make([][]string, groupValueInt, groupValueInt)
-			for i, userID := range shuffledMemberUIDs {
-				groupNo := i % groupValueInt
-				groupsUserIDs[groupNo] = append(groupsUserIDs[groupNo], userID)
-			}
-
-			// グルーピング情報セクション追加
-			for i, groupUserIDs := range groupsUserIDs {
-				if len(groupUserIDs) == 0 {
-					continue
-				}
-				groupResultSections := getGroupResultSections(groupUserIDs, i+1, md)
-				for _, groupInfoSec := range groupResultSections {
-					blocks = append(blocks, groupInfoSec)
-				}
-				blocks = append(blocks, util.Divider())
-			}
-			ok = true
-		case util.GroupTypeOptionSize:
-			// タイプ: グループサイズ指定
-			headerText := post.ScsText(fmt.Sprintf(
-				"指定チーム *%s* を *グループサイズ=%d%s* でグルーピングしました",
-				teamNamesString, groupValueInt, groupValueOption,
-			))
-			headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
-			blocks = []slack.Block{headerSection, util.Divider()}
-
-			// 各メンバー グループ割当
-			groupNum := len(shuffledMemberUIDs) / groupValueInt
-			groupsUserIDs := make([][]string, groupNum, groupNum+1)
-			for i, userID := range shuffledMemberUIDs[:(groupNum * groupValueInt)] {
-				groupNo := i % groupNum
-				groupsUserIDs[groupNo] = append(groupsUserIDs[groupNo], userID)
-			}
-
-			// 剰余メンバー グループ割当
-			if groupValueOption == "+" {
-				// チーム数を維持して，剰余メンバーを各チームに割り当てる
-				for i := groupNum * groupValueInt; i < len(shuffledMemberUIDs); i++ {
-					groupNo := i % groupValueInt
-					groupsUserIDs[groupNo] = append(groupsUserIDs[groupNo], shuffledMemberUIDs[i])
-				}
-			} else if groupValueOption == "-" {
-				// チームを1つ増やし，そのチームに剰余メンバーを全員割り当てる
-				groupsUserIDs = append(groupsUserIDs, shuffledMemberUIDs[(groupNum*groupValueInt):])
-			} else {
-			}
-
-			// グルーピング情報セクション追加
-			for i, groupUserIDs := range groupsUserIDs {
-				if len(groupUserIDs) == 0 {
-					continue
-				}
-				groupResultSections := getGroupResultSections(groupUserIDs, i+1, md)
-				for _, groupInfoSec := range groupResultSections {
-					blocks = append(blocks, groupInfoSec)
-				}
-				blocks = append(blocks, util.Divider())
-			}
-			ok = true
-		default:
-		}
+		blocks, ok = GroupBlocks(memberUserIDs, groupType, groupValueInt, groupValueOption, teamNamesString, md)
 	}
 
 	if ok {
-		util.Logger.Println("メンバーグルーピングに成功しました")
+		util.Logger.Println("メンバーグルーピング（チームメンバーモード）に成功しました")
 		responseType = util.InChannel
 	} else {
-		util.Logger.Println("メンバーグルーピングに失敗しました．詳細は Slack に投稿されたメッセージを確認してください．")
+		util.Logger.Println("メンバーグルーピング（チームメンバーモード）に失敗しました．詳細は Slack に投稿されたメッセージを確認してください．")
 		responseType = util.Ephemeral
 	}
 	return blocks, responseType

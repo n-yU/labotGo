@@ -4,8 +4,6 @@
 ## Docker
 - [【Go 言語】 Docker 上 で Gin を動かすまで - 猫でもわかるWebプログラミングと副業](https://www.utakata.work/entry//golang/tutorial/2-docker-go-gin)
 - [Golang - Dockerfileの最小構成 - Qiita](https://qiita.com/Yuuki557/items/3d088de91ab86bc71600)
-- [Go言語: ファイルの存在をちゃんとチェックする実装? - Qiita](https://qiita.com/suin/items/b9c0f92851454dc6d461)
-- [Go言語でファイル操作: ファイルを作って書き込む - Qiita](https://qiita.com/suin/items/7eb4fc405ac73846a9b1)
 
 ## Golang
 - [スターティングGo言語（松尾 愛賀）｜翔泳社の本](https://www.shoeisha.co.jp/book/detail/9784798142418)
@@ -19,6 +17,8 @@
 - [Go で実行ファイルのパスを取得 - Qiita](https://qiita.com/summer/items/2674a178ffe6acb895fb)
 - [GoでJSTのタイムゾーンを扱う方法 - 技術メモ](https://tutuz-tech.hatenablog.com/entry/2021/01/30/192956)
 - [golang で汎用的な任意数のオプションを取るメソッドの作り方 | Hori Blog](https://hori-ryota.com/blog/golang-highly-versatile-method-with-arbitary-options/)
+- [Go言語: ファイルの存在をちゃんとチェックする実装? - Qiita](https://qiita.com/suin/items/b9c0f92851454dc6d461)
+- [Go言語でファイル操作: ファイルを作って書き込む - Qiita](https://qiita.com/suin/items/7eb4fc405ac73846a9b1)
 
 ## slack-go
 - [slack-go/slack: Slack API in Go - community-maintained fork created by the original author, @nlopes](https://github.com/slack-go/slack)
