@@ -24,4 +24,15 @@ const (
 	EditTeamSelectMembers = "TeamEditTeamSelectMembers"
 	DeleteTeam            = "TeamDeleteTeam"
 	DeleteTeamSelectTeam  = "TeamDeleteTeamSelectTeam"
+
+	// グルーピング
+	BaseGroup                = "Group"
+	GroupTeam                = "GroupTeam"
+	GroupTeamSelectNames     = "GroupTeamSelectNames"
+	GroupTeamSelectType      = "GroupTeamSelectType"
+	GroupTeamInputValue      = "GroupTeamInputValue"
+	GroupCustom              = "GroupCustom"
+	GroupCustomSelectMembers = "GroupCustomSelectMembers"
+	GroupCustomSelectType    = "GroupCustomSelectType"
+	GroupCustomInputValue    = "GroupCustomInputValue"
 )

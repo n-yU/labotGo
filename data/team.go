@@ -2,6 +2,8 @@
 package data
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -62,6 +64,20 @@ func (td TeamsData) GetAllEditedNames() (teamName []string) {
 		}
 	}
 	return teamName
+}
+
+// 複合チームメンバー 取得
+func (td TeamsData) GetComplexTeamMemberUserIDs(teamNames []string) (memberUserIDs []string, err error) {
+	for _, teamName := range teamNames {
+		if team, ok := td[teamName]; ok {
+			for _, userID := range team.UserIDs {
+				memberUserIDs = append(memberUserIDs, userID)
+			}
+		} else {
+			err = errors.New(fmt.Sprintf("指定したチーム `%s` は存在しません", teamName))
+		}
+	}
+	return memberUserIDs, err
 }
 
 // チームデータによるメンバーデータの同期

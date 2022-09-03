@@ -170,7 +170,7 @@ func InfoMemberSection(
 	// 詳細版（listコマンド使用時）
 	if createdInfo != nil {
 		elements := []slack.MixedElement{
-			TxtBlockObj(util.Markdown, "作成"), slack.NewImageBlockElement(createdInfo.Image, userID),
+			TxtBlockObj(util.Markdown, "*作成*"), slack.NewImageBlockElement(createdInfo.Image, userID),
 			TxtBlockObj(util.Markdown, fmt.Sprintf("<@%s>", createdInfo.UserID)),
 			TxtBlockObj(util.Markdown, util.FormatTime(createdInfo.At)),
 		}
@@ -200,7 +200,7 @@ func InfoTeamSections(
 		createdUserIDObj := TxtBlockObj(util.Markdown, fmt.Sprintf("<@%s>", createdInfo.UserID))
 		createdAtObj := TxtBlockObj(util.Markdown, util.FormatTime(createdInfo.At))
 		elements = append(elements, []slack.MixedElement{
-			TxtBlockObj(util.Markdown, "作成"), createdImageObj, createdUserIDObj, createdAtObj,
+			TxtBlockObj(util.Markdown, "*作成*"), createdImageObj, createdUserIDObj, createdAtObj,
 		}...)
 	}
 	infoSections = append(infoSections, slack.NewContextBlock("", elements...))
@@ -304,7 +304,7 @@ func ErrBlocksTeamsData(err error, dataErrType string) []slack.Block {
 func ErrBlocksUnknownTeam(teamName string) []slack.Block {
 	text := ErrText(fmt.Sprintf("指定したチーム `%s` は存在しません", teamName))
 	textSection := SingleTextSectionBlock(util.Markdown, text)
-	tipsText := []string{fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください", util.Cmd)}
+	tipsText := []string{util.TipsTeamList()}
 	tipsSection := TipsSection(tipsText)
 
 	blocks := []slack.Block{textSection, tipsSection}

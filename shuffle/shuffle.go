@@ -58,7 +58,7 @@ func getBlocksShuffle(teamNamesString string) ([]slack.Block, string) {
 		util.Logger.Printf("指定メンバー: %s\n", strings.Join(memberUIDs, ", "))
 
 		// メンバーシャッフル
-		shuffledMemberUIDs := shuffleMemberUserIDs(memberUIDs)
+		shuffledMemberUIDs := ShuffleMemberUserIDs(memberUIDs)
 		if strings.Contains(teamName, "+") {
 			teamName = strings.Replace(teamName, "+", " + ", -1)
 		}
@@ -137,7 +137,7 @@ func getTeamsMembers(teamNamesString string) (memberUserIDs map[string][]string,
 }
 
 // メンバーシャッフル
-func shuffleMemberUserIDs(userIDs []string) (shuffledUserIDs []string) {
+func ShuffleMemberUserIDs(userIDs []string) (shuffledUserIDs []string) {
 	src := rand.NewSource(time.Now().UnixNano())
 	rnd := rand.New(src)
 

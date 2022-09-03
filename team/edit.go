@@ -13,10 +13,10 @@ import (
 )
 
 // チーム編集リクエスト（チーム選択）
-func getBlockEditTeamSelect() (blocks []slack.Block) {
+func getBlockEditTeamSelect() []slack.Block {
 	// チームデータ 読み込み
 	if td, err := data.LoadTeam(); err != nil {
-		blocks = post.ErrBlocksTeamsData(err, util.DataLoadErr)
+		return post.ErrBlocksTeamsData(err, util.DataLoadErr)
 	} else {
 		// ブロック: ヘッダ
 		headerText := post.InfoText("*編集したいチームを選択してください*")
@@ -29,9 +29,9 @@ func getBlockEditTeamSelect() (blocks []slack.Block) {
 		// ブロック: チーム選択
 		teamSelectSection := post.SelectTeamsSection(td.GetAllEditedNames(), aid.EditTeamSelectName, []string{}, false)
 
-		blocks = []slack.Block{headerSection, headerTipsSection, util.Divider(), teamSelectSection}
+		blocks := []slack.Block{headerSection, headerTipsSection, util.Divider(), teamSelectSection}
+		return blocks
 	}
-	return blocks
 }
 
 // チーム編集リクエスト（チーム名入力・メンバー選択）

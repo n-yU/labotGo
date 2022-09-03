@@ -31,6 +31,9 @@ const (
 
 	DataLoadErr   = "dataLoadError"
 	DataReloadErr = "dataReloadError"
+
+	GroupTypeOptionNum  = "グループ数"
+	GroupTypeOptionSize = "グループサイズ"
 )
 
 var (
@@ -56,6 +59,10 @@ func TeamDataPath() string {
 // getter: マスターユーザ Tips
 func TipsMasterUser() string {
 	return fmt.Sprintf("ユーザ <@%s> はマスターメンバーです．編集・削除などの各操作はできません．", MasterUserID)
+}
+
+func TipsTeamList() string {
+	return fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください", Cmd)
 }
 
 // 環境変数 読み込み

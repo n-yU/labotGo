@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/n-yU/labotGo/aid"
+	"github.com/n-yU/labotGo/group"
 	"github.com/n-yU/labotGo/member"
 	"github.com/n-yU/labotGo/post"
 	"github.com/n-yU/labotGo/shuffle"
@@ -74,7 +75,12 @@ func Command(cmd slack.SlashCommand) error {
 			blocks, responseType, ok = shuffle.GetBlocks(cmdValues)
 		}
 	case "group":
-
+		if isEmptyValues {
+			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります", util.Cmd, cmdType))
+			blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
+		} else {
+			blocks, responseType, ok = group.GetBlocks(cmdValues)
+		}
 	default:
 		text := post.ErrText(fmt.Sprintf("コマンド %s *%s* を使用することはできません\n", util.Cmd, cmdType))
 		blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
@@ -106,6 +112,8 @@ func BlockAction(callback slack.InteractionCallback) (err error) {
 		err = member.Action(actionID, callback)
 	case strings.HasPrefix(actionID, aid.BaseTeam):
 		err = team.Action(actionID, callback)
+	case strings.HasPrefix(actionID, aid.BaseGroup):
+		err = group.Action(actionID, callback)
 	default:
 		util.Logger.Printf("不明なアクション %s を受け取りました\n", actionID)
 	}
