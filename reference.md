@@ -4,6 +4,9 @@
 ## Docker
 - [【Go 言語】 Docker 上 で Gin を動かすまで - 猫でもわかるWebプログラミングと副業](https://www.utakata.work/entry//golang/tutorial/2-docker-go-gin)
 - [Golang - Dockerfileの最小構成 - Qiita](https://qiita.com/Yuuki557/items/3d088de91ab86bc71600)
+- [DockerコンテナでElasticSearchを起動する（docker-compose） - Qiita](https://qiita.com/hiroky_814/items/7a8ddddd472d47f6435b)
+- [GoからDocker上のElasticsearchに接続する際にネットワークのSniffingでハマった - 🤖](https://kotaroooo0-dev.hatenablog.com/entry/docker-es-network)
+
 
 ## Golang
 - [スターティングGo言語（松尾 愛賀）｜翔泳社の本](https://www.shoeisha.co.jp/book/detail/9784798142418)
@@ -49,3 +52,9 @@
 - [GoでGETによるリクエスト \[parameter\]\[http.Get\]\[http.Client\]](https://noumenon-th.net/programming/2019/09/04/http-get/)
 - [Go の net/http を使って Web API にリクエストを行う：CData API Server - CData Software Blog](https://www.cdata.com/jp/blog/entry/golanghttpapi)
 - [openBDのAPIライブラリをGoでつくりました - Qiita](https://qiita.com/seihmd/items/d1f8b3b54cbc93346d78)
+- [seihmd/openbd: openBD API written by Go](https://github.com/seihmd/openbd)
+
+## Elasticsearch
+- [はじめての Elasticsearch - Qiita](https://qiita.com/nskydiving/items/1c2dc4e0b9c98d164329)
+- [Python Elasticsearch 基本的な使い方まとめ - Qiita](https://qiita.com/satto_sann/items/8a63761bbfd6542bb9a2)
+- [【Go, Elasticsearch】ElasticSearchクライアント olivere を使ってみる(CRUD)](https://zenn.dev/a_ichi1/articles/555c8eed11fdad)

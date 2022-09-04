@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/olivere/elastic/v7"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/socketmode"
 )
@@ -36,12 +37,17 @@ const (
 	GroupTypeOptionSize = "グループサイズ"
 
 	OpenBD = "https://api.openbd.jp/v1/get"
+
+	EsURL = "http://elasticsearch:9200"
 )
 
 var (
 	Logger           *log.Logger
 	Api              *slack.Client
 	SocketModeClient *socketmode.Client
+
+	EsClient  *elastic.Client
+	EsVersion string
 
 	Dir          string   // 実行ファイルパスディレクトリ
 	AllUserIDs   []string // ワークスペース全ユーザID

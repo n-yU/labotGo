@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/n-yU/labotGo/aid"
 	"github.com/n-yU/labotGo/data"
@@ -92,9 +93,16 @@ func RegisterBookConfirm(actionUserID string, blockActions map[string]map[string
 	}
 
 	// 書籍サマリ 取得
+	(&books[0].BookSummary).SetPubdateYMD()
+	books[0].SetContent()
 	bookSummary := books[0].BookSummary
-	(&bookSummary).FormatPubdate()
 	util.Logger.Printf("書籍情報: %+v\n", bookSummary)
+
+	// 書籍サマリ 一時保存
+	if _, ok := data.BookBuffer[actionUserID]; !ok {
+		data.BookBuffer[actionUserID] = map[string]data.BookSummary{}
+	}
+	data.BookBuffer[actionUserID][ISBN] = bookSummary
 
 	// ブロック: ヘッダ
 	headerText := post.InfoText("以下の書籍を登録します．情報が正しければ *登録* ボタンをクリックしてください．")
@@ -108,13 +116,21 @@ func RegisterBookConfirm(actionUserID string, blockActions map[string]map[string
 	infoBookSection := post.InfoBookSection(bookSummary)
 
 	// ブロック: 登録ボタン
-	actionBtnBlock := post.BtnOK("登録", aid.RegisterBook)
+	actionBtnActionID := strings.Join([]string{aid.RegisterBook, ISBN}, "_")
+	actionBtnBlock := post.BtnOK("登録", actionBtnActionID)
 
 	blocks = []slack.Block{headerSection, headerTipsSection, util.Divider(), infoBookSection, actionBtnBlock}
 	return blocks
 }
 
-// 書籍登録（スプレッドシート編集）
-func RegisterBook(actionUserID string, blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
+// 書籍登録
+func RegisterBook(actionUserID string, blockActions map[string]map[string]slack.BlockAction, ISBN string) (blocks []slack.Block) {
+	util.Logger.Printf("書籍登録 (from %s): %s %+v\n", actionUserID, ISBN, blockActions)
+	bookSummary := data.BookBuffer[actionUserID][ISBN]
+
+	text := post.ScsText(fmt.Sprintf("書籍: *%s* （ISBN: %s）の登録に成功しました", bookSummary.Title, bookSummary.ISBN))
+	blocks = post.SingleTextBlock(text)
+	delete(data.BookBuffer[actionUserID], ISBN)
+	util.Logger.Println("書籍登録に成功しました")
 	return blocks
 }

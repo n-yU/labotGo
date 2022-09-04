@@ -12,6 +12,7 @@ import (
 	"github.com/n-yU/labotGo/listen"
 	"github.com/n-yU/labotGo/post"
 	"github.com/n-yU/labotGo/util"
+	"github.com/olivere/elastic/v7"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
@@ -146,6 +147,19 @@ func main() {
 		log.Fatal(err)
 	}
 	util.MasterUserID = response.UserID
+
+	// 登録書籍サマリバッファ 初期化
+	data.BookBuffer = map[string]map[string]data.BookSummary{}
+
+	// Elasticsearch: クライアント生成
+	if util.EsClient, err = elastic.NewClient(elastic.SetURL(util.EsURL), elastic.SetSniff(false)); err != nil {
+		util.Logger.Fatal(err)
+	}
+	// Elasticsearch: バージョン取得
+	if util.EsVersion, err = util.EsClient.ElasticsearchVersion(util.EsURL); err != nil {
+		panic(err)
+	}
+	util.Logger.Printf("Elasticsearch バージョン %s\n", util.EsVersion)
 
 	// 初回起動チェック（データファイル生成）
 	isFirstRun, err := checkFirstRun()

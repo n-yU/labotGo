@@ -1,0 +1,61 @@
+{
+    "settings": {
+        "analysis": {
+            "tokenizer": {
+                "kuromoji_search": {
+                    "type": "kuromoji_tokenizer",
+                    "mode": "search"
+                }
+            },
+            "analyzer": {
+                "my_analyzer": {
+                    "type": "custom",
+                    "tokenizer": "kuromoji_search",
+                    "char_filter": [
+                        "icu_normalizer"
+                    ],
+                    "filter": [
+                        "kuromoji_part_of_speech"
+                    ]
+                }
+            }
+        }
+    },
+    "mappings": {
+        "properties": {
+            "title": {
+                "type": "text",
+                "index": true,
+                "analyzer": "my_analyzer"
+            },
+            "isbn10": {
+                "type": "text",
+                "index": true
+            },
+            "publisher": {
+                "type": "text",
+                "index": true,
+                "analyzer": "my_analyzer"
+            },
+            "pubdate": {
+                "type": "text",
+                "index": true,
+                "analyzer": "my_analyzer"
+            },
+            "cover": {
+                "type": "text",
+                "index": true
+            },
+            "authors": {
+                "type": "text",
+                "index": true,
+                "analyzer": "my_analyzer"
+            },
+            "description": {
+                "type": "text",
+                "index": true,
+                "analyzer": "my_analyzer"
+            }
+        }
+    }
+}

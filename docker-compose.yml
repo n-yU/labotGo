@@ -1,9 +1,36 @@
 version: '3.8'
 
 services:
+  elasticsearch:
+    container_name: labotGo_es
+    build: ./elasticsearch
+    environment:
+      - discovery.type=single-node
+      - cluster.name=elasticsearch
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - ./elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - esnet
+
   go:
-    container_name: labotgo
+    container_name: labotGo
     build: .
+    links:
+      - elasticsearch
     tty: true
     volumes:
-        - .:/go/src/app
+      - .:/go/src/app
+    networks:
+      - esnet
+
+networks:
+  esnet:

@@ -32,7 +32,7 @@ func InfoBookSection(bookSummary data.BookSummary) *slack.SectionBlock {
 	// 書籍情報
 	titleField := TxtBlockObj(util.Markdown, fmt.Sprintf("タイトル:\n*%s*", bookSummary.Title))
 	publisherField := TxtBlockObj(util.Markdown, fmt.Sprintf("出版社:\n*%s*", bookSummary.Publisher))
-	pubdateField := TxtBlockObj(util.Markdown, fmt.Sprintf("出版日:\n*%s*", bookSummary.Pubdate))
+	pubdateField := TxtBlockObj(util.Markdown, fmt.Sprintf("出版日:\n*%s*", bookSummary.PubdateYMD))
 	authorsField := TxtBlockObj(util.Markdown, fmt.Sprintf("著者:\n*%s*", bookSummary.Authors))
 	infoFields := []*slack.TextBlockObject{titleField, publisherField, pubdateField, authorsField}
 

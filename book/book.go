@@ -39,8 +39,9 @@ func Action(actionID string, callback slack.InteractionCallback) (err error) {
 	switch {
 	case actionID == aid.RegisterBookRequest:
 		blocks = RegisterBookConfirm(actionUserID, callback.BlockActionState.Values)
-	case actionID == aid.RegisterBook:
-		blocks = RegisterBook(actionUserID, callback.BlockActionState.Values)
+	case strings.HasPrefix(actionID, aid.RegisterBook+"_"):
+		ISBN := strings.Split(actionID, "_")[1]
+		blocks = RegisterBook(actionUserID, callback.BlockActionState.Values, ISBN)
 	}
 
 	if len(blocks) > 0 {
