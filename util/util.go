@@ -34,6 +34,8 @@ const (
 
 	GroupTypeOptionNum  = "グループ数"
 	GroupTypeOptionSize = "グループサイズ"
+
+	OpenBD = "https://api.openbd.jp/v1/get"
 )
 
 var (

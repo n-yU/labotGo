@@ -35,4 +35,10 @@ const (
 	GroupCustomSelectMembers = "GroupCustomSelectMembers"
 	GroupCustomSelectType    = "GroupCustomSelectType"
 	GroupCustomInputValue    = "GroupCustomInputValue"
+
+	// 書籍管理
+	BaseBook              = "Book"
+	RegisterBook          = "BookRegisterBook"
+	RegisterBookInputISBN = "BookRegisterBookInputISBN"
+	RegisterBookRequest   = "BookRegisterBookRequest"
 )

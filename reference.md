@@ -43,3 +43,9 @@
 ## YAML
 - [go-yaml/yaml: YAML support for the Go language.](https://github.com/go-yaml/yaml)
 - [Go言語(golang) YAMLの使い方 - golangの日記](https://golang.hateblo.jp/entry/2018/11/08/183555)
+
+## openBD
+- [openBD | 書誌情報・書影を自由に](https://openbd.jp/)
+- [GoでGETによるリクエスト \[parameter\]\[http.Get\]\[http.Client\]](https://noumenon-th.net/programming/2019/09/04/http-get/)
+- [Go の net/http を使って Web API にリクエストを行う：CData API Server - CData Software Blog](https://www.cdata.com/jp/blog/entry/golanghttpapi)
+- [openBDのAPIライブラリをGoでつくりました - Qiita](https://qiita.com/seihmd/items/d1f8b3b54cbc93346d78)
