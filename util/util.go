@@ -39,8 +39,9 @@ const (
 
 	OpenBD = "https://api.openbd.jp/v1/get"
 
-	EsURL           = "http://elasticsearch:9200"
-	EsBookIndexName = "book"
+	EsURL       = "http://elasticsearch:9200"
+	EsBookIndex = "book"
+	EsBookType  = "doc"
 )
 
 var (

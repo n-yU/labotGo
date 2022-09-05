@@ -1,4 +1,4 @@
-// 機能: スプレッドシート書籍管理
+// 機能: 書籍管理
 package book
 
 import (
@@ -19,10 +19,10 @@ func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, o
 	switch subType, subValues := cmdValues[0], cmdValues[1:]; subType {
 	case "register":
 		blocks, ok = getBlocksRegisterRequest(), true
-	case "delete":
-		blocks, ok = getBlocksDeleteRequest(), true
 	case "reset":
 		blocks, ok = getBlocksResetRequest(), true
+	case "delete":
+		blocks, ok = getBlocksDeleteRequest(), true
 	default:
 		text := post.ErrText(fmt.Sprintf("コマンド %s team *%s* %s を使用することはできません", util.Cmd, subType, strings.Join(subValues, " ")))
 		blocks, ok = post.SingleTextBlock(text), false
@@ -46,6 +46,11 @@ func Action(actionID string, callback slack.InteractionCallback) (err error) {
 		blocks = RegisterBook(actionUserID, callback.BlockActionState.Values, ISBN)
 	case actionID == aid.ResetBook:
 		blocks = ResetBook(actionUserID, callback.BlockActionState.Values)
+	case actionID == aid.DeleteBookRequest:
+		blocks = DeleteBookConfirm(actionUserID, callback.BlockActionState.Values)
+	case strings.HasPrefix(actionID, aid.DeleteBook+"_"):
+		ISBN := strings.Split(actionID, "_")[1]
+		blocks = DeleteBook(actionUserID, callback.BlockActionState.Values, ISBN)
 	}
 
 	if len(blocks) > 0 {
@@ -55,11 +60,11 @@ func Action(actionID string, callback slack.InteractionCallback) (err error) {
 }
 
 // ISBNコード 取得
-func getISBN(blockActions map[string]map[string]slack.BlockAction) (ISBNString string) {
+func getISBN(actionID string, blockActions map[string]map[string]slack.BlockAction) (ISBNString string) {
 	for _, action := range blockActions {
-		for actionID, values := range action {
-			switch actionID {
-			case aid.RegisterBookInputISBN:
+		for aID, values := range action {
+			switch aID {
+			case actionID:
 				ISBNString = values.Value
 			}
 		}
@@ -68,7 +73,8 @@ func getISBN(blockActions map[string]map[string]slack.BlockAction) (ISBNString s
 }
 
 // ISBNコード バリデーションチェック
-func validateISBN(ISBN string) (blocks []slack.Block) {
+func validateISBN(ISBN string) (string, []slack.Block) {
+	var blocks []slack.Block
 	if _, err := strconv.Atoi(ISBN); err != nil {
 		blocks = post.SingleTextBlock(post.ErrText("指定した ISBNコード に数字以外が含まれています"))
 	} else if len(ISBN) != 10 && len(ISBN) != 13 {
@@ -76,7 +82,11 @@ func validateISBN(ISBN string) (blocks []slack.Block) {
 	} else if len(ISBN) == 13 && !strings.HasPrefix(ISBN, "978") {
 		blocks = post.SingleTextBlock(post.ErrText("13桁の ISBNコード の接頭記号は必ず `978` です（もしくはこれを省略できます）"))
 	}
-	return blocks
+
+	if len(ISBN) == 10 {
+		ISBN = "978" + ISBN
+	}
+	return ISBN, blocks
 }
 
 // OpenBD 書籍情報取得

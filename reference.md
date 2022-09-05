@@ -23,6 +23,7 @@
 - [Go言語でファイル操作: ファイルを作って書き込む - Qiita](https://qiita.com/suin/items/7eb4fc405ac73846a9b1)
 - [【Go】bcrypt を使ってパスワードのハッシュ値を生成して検証する](https://zenn.dev/kou_pg_0131/articles/go-digest-and-compare-by-bcrypt)
 - [go bcryptのコードを読む - Qiita](https://qiita.com/butterv/items/ca330d27fe51a6bf7a3d)
+- [Goでのエラー判別 - Qiita](https://qiita.com/minoritea/items/94feb33b61c5fdcc6105)
 
 ## slack-go
 - [slack-go/slack: Slack API in Go - community-maintained fork created by the original author, @nlopes](https://github.com/slack-go/slack)

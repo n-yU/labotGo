@@ -175,6 +175,7 @@ func main() {
 		panic(err)
 	}
 	util.Logger.Printf("Elasticsearch バージョン %s\n", util.EsVersion)
+	util.Logger.Println("Elasticsearch - http://127.0.0.1:9200/")
 
 	// 初回起動チェック（データファイル生成）
 	if isFirstRun, err := checkFirstRun(); isFirstRun {
@@ -195,7 +196,7 @@ func main() {
 	util.Logger.Println("Tips: ボットが正常に動作しなくなる恐れがあるため，メンバー／チームデータは直接編集しないでください")
 
 	// Elasticsearch: 書籍 index チェック
-	if isBookIndex, err := es.InitializeIndex(util.EsBookIndexName, util.EsBookMappingPath()); !isBookIndex {
+	if isBookIndex, err := es.InitializeIndex(util.EsBookIndex, util.EsBookMappingPath()); !isBookIndex {
 		if err != nil {
 			util.Logger.Println(util.ReferErrorDetail)
 			util.Logger.Fatal(err)

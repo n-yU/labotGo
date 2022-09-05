@@ -1,4 +1,4 @@
-// 機能: スプレッドシート書籍管理
+// 機能: 書籍管理
 package book
 
 import (
@@ -54,7 +54,7 @@ func ResetBook(actionUserID string, blockActions map[string]map[string]slack.Blo
 	}
 
 	// book index リセット
-	if err := es.ResetIndex(util.EsBookIndexName, util.EsBookMappingPath()); err != nil {
+	if err := es.ResetIndex(util.EsBookIndex, util.EsBookMappingPath()); err != nil {
 		text := post.ErrText(fmt.Sprintf("以下のエラーにより書籍データのリセットに失敗しました\n\n%s", err))
 		blocks = post.SingleTextBlock(text)
 		return blocks

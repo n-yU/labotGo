@@ -43,4 +43,7 @@ const (
 	RegisterBookRequest   = "BookRegisterBookRequest"
 	ResetBook             = "BookResetBook"
 	ResetBookInputCode    = "BookResetBookInputCode"
+	DeleteBook            = "BookDeleteBook"
+	DeleteBookInputISBN   = "BookDeleteBookInputISBN"
+	DeleteBookRequest     = "BookDeleteBookRequest"
 )

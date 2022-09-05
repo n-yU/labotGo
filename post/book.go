@@ -3,6 +3,7 @@ package post
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/n-yU/labotGo/data"
 	"github.com/n-yU/labotGo/util"
@@ -60,5 +61,36 @@ func UnknownBookBlock(book *data.Book, ISBN string) (blocks []slack.Block) {
 		tipsSection := TipsSection(tipsText)
 		blocks = []slack.Block{headerSection, tipsSection}
 	}
+	return blocks
+}
+
+// 定型ブロック: OpenBD リクエストエラー
+func ErrBlocksRequestOpenBD(err error, res *http.Response) []slack.Block {
+	util.Logger.Println(err)
+
+	text := "<https://openbd.jp/|OpenBD> への書籍情報の取得を試みましたが，次のエラーにより失敗しました\n\n"
+	if err != nil {
+		text += fmt.Sprintf("%v", err)
+	} else {
+		text += res.Status
+	}
+
+	blocks := SingleTextBlock(ErrText(text))
+	return blocks
+}
+
+// 定型ブロック: レスポンスボディ 読み込みエラー
+func ErrBlocksReadResponseBody(err error) []slack.Block {
+	util.Logger.Println(err)
+	text := fmt.Sprintf("レスポンスボディの読み込み時に，次のエラーにより失敗しました\n\n%v", err)
+	blocks := SingleTextBlock(ErrText(text))
+	return blocks
+}
+
+// 定型ブロック: 書籍情報 読み込みエラー
+func ErrBlocksLoadBookInfo(err error) []slack.Block {
+	util.Logger.Println(err)
+	text := ErrText(fmt.Sprintf("書籍情報の読み込み時に，次のエラーにより失敗しました\n\n%v", err))
+	blocks := SingleTextBlock(text)
 	return blocks
 }

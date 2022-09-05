@@ -1,4 +1,4 @@
-// 機能: スプレッドシート書籍管理
+// 機能: 書籍管理
 package book
 
 import (
@@ -42,50 +42,31 @@ func RegisterBookConfirm(actionUserID string, blockActions map[string]map[string
 	util.Logger.Printf("書籍登録リクエスト (from %s): %+v\n", actionUserID, blockActions)
 
 	// ISBNコード 取得
-	ISBN := getISBN(blockActions)
+	ISBN := getISBN(aid.RegisterBookInputISBN, blockActions)
 	util.Logger.Printf("ISBNコード: %s\n", ISBN)
 
 	// バリデーションチェック
-	blocks = validateISBN(ISBN)
-	if len(blocks) > 0 {
+	if ISBN, blocks = validateISBN(ISBN); len(blocks) > 0 {
 		util.Logger.Println("ISBNコードの形式が不適切です．詳細は Slack に投稿されたメッセージを確認してください．")
 		return blocks
-	}
-	if len(blocks) == 10 {
-		ISBN = "978" + ISBN
 	}
 
 	// 書籍情報 取得（from OpenBD）
 	res, err := requestOpenBD(ISBN)
 	if err != nil || res.StatusCode != 200 {
-		text := "<https://openbd.jp/|OpenBD> からの書籍情報の取得を試みましたが，次のエラーにより失敗しました\n\n"
-		if err != nil {
-			text += fmt.Sprintf("%v", err)
-		} else {
-			text += res.Status
-		}
-
-		blocks = post.SingleTextBlock(post.ErrText(text))
-		util.Logger.Println(err)
-		return blocks
+		return post.ErrBlocksRequestOpenBD(err, res)
 	}
 
 	// レスポンスボディ 読み込み
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		text := fmt.Sprintf("レスポンスボディの読み込み時に，次のエラーにより失敗しました\n\n%v", err)
-		blocks = post.SingleTextBlock(post.ErrText(text))
-		util.Logger.Println(err)
-		return blocks
+		return post.ErrBlocksReadResponseBody(err)
 	}
 
 	// 書籍情報 読み込み
 	if err := json.Unmarshal(body, &books); err != nil {
-		util.Logger.Println(err)
-		text := post.ErrText(fmt.Sprintf("書籍情報の読み込み時に，次のエラーにより失敗しました\n\n%v", err))
-		blocks := post.SingleTextBlock(text)
-		return blocks
+		return post.ErrBlocksLoadBookInfo(err)
 	}
 
 	// 書籍情報有無 確認
@@ -134,9 +115,15 @@ func RegisterBook(actionUserID string, blockActions map[string]map[string]slack.
 		return blocks
 	}
 
-	// index: book への書籍追加
-	if err := es.PutIndex(bookSummary); err != nil {
-		text := post.ErrText(fmt.Sprintf("書籍登録時に次のエラーにより失敗しました\n\n%v", err))
+	// book-doc への書籍追加
+	if err := es.PutDocument(bookSummary); err != nil {
+		var text string
+		switch err {
+		case es.ErrDocAlreadyExist:
+			text = post.ErrText(fmt.Sprintf("指定した書籍（ISBN: %s）は既に登録されています\n", ISBN))
+		default:
+			text = post.ErrText(fmt.Sprintf("次のエラーにより書籍登録に失敗しました\n\n%v", err))
+		}
 		blocks = post.SingleTextBlock(text)
 		return blocks
 	}
@@ -148,7 +135,7 @@ func RegisterBook(actionUserID string, blockActions map[string]map[string]slack.
 	// ブロック: ヘッダ Tips
 	headerTipsText := []string{
 		"上記フォームは ISBNコード の入力欄を書き換えることで再利用できます",
-		fmt.Sprintf("現在 *%d* 冊の書籍が *labotGo* に登録されています\n", es.CountDoc(util.EsBookIndexName)),
+		fmt.Sprintf("現在 *%d* 冊の書籍が *labotGo* に登録されています\n", es.CountDoc(util.EsBookIndex)),
 	}
 	headerTipsSection := post.TipsSection(headerTipsText)
 	blocks = []slack.Block{headerSection, headerTipsSection}

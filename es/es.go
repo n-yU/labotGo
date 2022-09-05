@@ -10,10 +10,16 @@ import (
 
 	"github.com/n-yU/labotGo/data"
 	"github.com/n-yU/labotGo/util"
+	"github.com/olivere/elastic/v7"
+)
+
+var (
+	ErrDocAlreadyExist = errors.New("index に指定したIDの document が既に存在します")
+	ErrDocNotFound     = errors.New("index にて指定したIDの document が見つかりませんでした")
 )
 
 // index: 作成
-func CreateIndex(indexName string, mappingPath string) (err error) {
+func CreateIndex(index string, mappingPath string) (err error) {
 	f, err := os.Open(mappingPath)
 	if err != nil {
 		return err
@@ -24,61 +30,61 @@ func CreateIndex(indexName string, mappingPath string) (err error) {
 	}
 	mapping := string(bs)
 
-	if createIndex, err := util.EsClient.CreateIndex(indexName).Body(
+	if createIndex, err := util.EsClient.CreateIndex(index).Body(
 		mapping).IncludeTypeName(true).Do(context.Background()); err != nil {
-		util.Logger.Printf("index \"%s\" の作成に失敗しました\n", indexName)
+		util.Logger.Printf("index \"%s\" の作成に失敗しました\n", index)
 		return err
 	} else if !createIndex.Acknowledged {
-		util.Logger.Printf("create %s index - Not acknowledged\n", indexName)
+		util.Logger.Printf("create %s index - Not acknowledged\n", index)
 	} else {
 	}
 
-	util.Logger.Printf("index \"%s\" の作成に成功しました\n", indexName)
+	util.Logger.Printf("index \"%s\" の作成に成功しました\n", index)
 	return err
 }
 
 // index: 削除
-func DeleteIndex(indexName string) (err error) {
+func DeleteIndex(index string) (err error) {
 	ctx := context.Background()
-	if deleteIndex, err := util.EsClient.DeleteIndex(indexName).Do(ctx); err != nil {
-		util.Logger.Printf("index \"%s\" の削除に失敗しました\n", indexName)
+	if deleteIndex, err := util.EsClient.DeleteIndex(index).Do(ctx); err != nil {
+		util.Logger.Printf("index \"%s\" の削除に失敗しました\n", index)
 		return err
 	} else if !deleteIndex.Acknowledged {
-		util.Logger.Printf("delete %s index - Not acknowledged\n", indexName)
+		util.Logger.Printf("delete %s index - Not acknowledged\n", index)
 	}
 
-	util.Logger.Printf("index \"%s\" の削除に成功しました\n", indexName)
+	util.Logger.Printf("index \"%s\" の削除に成功しました\n", index)
 	return err
 }
 
 // index: 初期化
-func InitializeIndex(indexName string, mappingPath string) (isBookIndex bool, err error) {
+func InitializeIndex(index string, mappingPath string) (isBookIndex bool, err error) {
 	// index 存在確認
-	if isBookIndex, err = IsExistIndex(indexName); err != nil {
+	if isBookIndex, err = IsExistIndex(index); err != nil {
 		return isBookIndex, err
 	} else if !isBookIndex {
 		// index の存在が確認できない場合は作成
-		if err = CreateIndex(indexName, mappingPath); err != nil {
+		if err = CreateIndex(index, mappingPath); err != nil {
 			return isBookIndex, err
 		}
 	} else {
-		util.Logger.Printf("index \"%s\" の存在を確認しました\n", indexName)
+		util.Logger.Printf("index \"%s\" の存在を確認しました\n", index)
 	}
 	return isBookIndex, err
 }
 
 // index: リセット
-func ResetIndex(indexName, mappingPath string) (err error) {
+func ResetIndex(index, mappingPath string) (err error) {
 	// index 削除
-	err = DeleteIndex(indexName)
+	err = DeleteIndex(index)
 	if err == nil {
-		err = CreateIndex(indexName, mappingPath)
+		err = CreateIndex(index, mappingPath)
 	}
 
 	if err == nil {
-		util.Logger.Printf("index \"%s\" のリセットに成功しました\n", indexName)
+		util.Logger.Printf("index \"%s\" のリセットに成功しました\n", index)
 	} else {
-		util.Logger.Printf("index \"%s\" のリセットに失敗しました\n", indexName)
+		util.Logger.Printf("index \"%s\" のリセットに失敗しました\n", index)
 		util.Logger.Println(util.ReferErrorDetail)
 		util.Logger.Println(err)
 	}
@@ -86,30 +92,53 @@ func ResetIndex(indexName, mappingPath string) (err error) {
 }
 
 // index: 存在有無
-func IsExistIndex(indexName string) (bool, error) {
-	isExist, err := util.EsClient.IndexExists(indexName).Do(context.Background())
+func IsExistIndex(index string) (bool, error) {
+	isExist, err := util.EsClient.IndexExists(index).Do(context.Background())
 	return isExist, err
 }
 
-// index: 追加
-func PutIndex(body interface{}) (err error) {
-	var indexName string
+// index: 登録 document カウント
+func CountDoc(index string) int64 {
+	count, _ := util.EsClient.Count(util.EsBookIndex).Do(context.Background())
+	return count
+}
 
-	// body の型から index 決定
+// document: 存在有無
+func IsExistDoc(index, type_, id string) bool {
+	ctx := context.Background()
+	_, err := util.EsClient.Get().Index(index).Type(type_).Id(id).Do(ctx)
+	isExist := !elastic.IsNotFound(err)
+	return isExist
+}
+
+// document: 追加
+func PutDocument(body interface{}) (err error) {
+	var index, type_ string
+	ctx := context.Background()
+
+	// body の型から index,type 決定
 	switch body.(type) {
 	case data.BookSummary:
 		// 書籍サマリ -> book
 		bookSummary := body.(data.BookSummary)
-		indexName = util.EsBookIndexName
-		util.Logger.Printf("index \"%s\" への document 追加を試みます（ISBN: %s）\n", indexName, bookSummary.ISBN)
+		index, type_ = util.EsBookIndex, util.EsBookType
+		util.Logger.Printf("index \"%s\" - type \"%s\" への document 追加を試みます（ISBN: %s）\n", index, type_, bookSummary.ISBN)
 
-		doc, err := util.EsClient.Index().Index(indexName).Type("doc").Id(bookSummary.ISBN).BodyJson(bookSummary).Do(context.Background())
+		// 書籍存在確認
+		if IsExistDoc(index, type_, bookSummary.ISBN) {
+			err = ErrDocAlreadyExist
+			util.Logger.Println(err)
+			return err
+		}
+
+		// 書籍登録
+		doc, err := util.EsClient.Index().Index(index).Type(util.EsBookType).Id(bookSummary.ISBN).BodyJson(bookSummary).Do(ctx)
 		if err != nil {
-			util.Logger.Printf("index \"%s\" への document 追加に失敗しました\n", indexName)
+			util.Logger.Printf("index \"%s\" - type \"%s\" への document 追加に失敗しました\n", index, type_)
 			util.Logger.Println(util.ReferErrorDetail)
 			return err
 		}
-		util.Logger.Printf("index \"%s\" への document 追加に成功しました（ID: %s）\n", doc.Index, doc.Id)
+		util.Logger.Printf("index \"%s\" - type \"%s\" への document 追加に成功しました（ID: %s）\n", doc.Index, doc.Type, doc.Id)
 	default:
 		// 未定義構造体
 		err = errors.New(fmt.Sprintf("%T 型の body はインデックスへの追加に対応していません", body))
@@ -119,8 +148,39 @@ func PutIndex(body interface{}) (err error) {
 	return err
 }
 
-// index: 登録 document カウント
-func CountDoc(indexName string) int64 {
-	count, _ := util.EsClient.Count(util.EsBookIndexName).Do(context.Background())
-	return count
+// document: 削除
+func DeleteDocument(body interface{}) (err error) {
+	var index, type_ string
+	ctx := context.Background()
+
+	// body の型から index,type 決定
+	switch body.(type) {
+	case data.BookSummary:
+		// 書籍サマリ -> book
+		bookSummary := body.(data.BookSummary)
+		index, type_ = util.EsBookIndex, util.EsBookType
+		util.Logger.Printf("index \"%s\" - type \"%s\" への document 削除を試みます（ISBN: %s）\n", index, type_, bookSummary.ISBN)
+
+		// 書籍存在確認
+		if !IsExistDoc(index, type_, bookSummary.ISBN) {
+			err = ErrDocNotFound
+			util.Logger.Println(err)
+			return err
+		}
+
+		// 書籍削除
+		doc, err := util.EsClient.Delete().Index(index).Type(type_).Id(bookSummary.ISBN).Do(ctx)
+		if err != nil {
+			util.Logger.Printf("index \"%s\" - type \"%s\" への document 削除に失敗しました\n", index, type_)
+			util.Logger.Println(util.ReferErrorDetail)
+			return err
+		}
+		util.Logger.Printf("index \"%s\" - type \"%s\" への document 削除に成功しました（ID: %s）\n", doc.Index, doc.Type, doc.Id)
+	default:
+		// 未定義構造体
+		err = errors.New(fmt.Sprintf("%T 型の body はインデックスへの追加に対応していません", body))
+		return err
+	}
+
+	return err
 }
