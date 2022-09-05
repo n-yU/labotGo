@@ -4,6 +4,6 @@ package book
 import "github.com/slack-go/slack"
 
 // 書籍削除リクエスト
-func getBlockDeleteRequest() (blocks []slack.Block) {
+func getBlocksDeleteRequest() (blocks []slack.Block) {
 	return blocks
 }

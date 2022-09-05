@@ -28,8 +28,9 @@ func InputISBNSection(actionID string) *slack.InputBlock {
 }
 
 // 定型セクション: 書籍情報
-func InfoBookSection(bookSummary data.BookSummary) *slack.SectionBlock {
+func InfoBookSection(bookSummary data.BookSummary) (infoSection *slack.SectionBlock) {
 	// 書籍情報
+	util.Logger.Printf("%+v\n", bookSummary)
 	titleField := TxtBlockObj(util.Markdown, fmt.Sprintf("タイトル:\n*%s*", bookSummary.Title))
 	publisherField := TxtBlockObj(util.Markdown, fmt.Sprintf("出版社:\n*%s*", bookSummary.Publisher))
 	pubdateField := TxtBlockObj(util.Markdown, fmt.Sprintf("出版日:\n*%s*", bookSummary.PubdateYMD))
@@ -37,10 +38,14 @@ func InfoBookSection(bookSummary data.BookSummary) *slack.SectionBlock {
 	infoFields := []*slack.TextBlockObject{titleField, publisherField, pubdateField, authorsField}
 
 	// 書籍表紙画像
-	coverElement := slack.NewImageBlockElement(bookSummary.Cover, bookSummary.Title)
-	infoAccessory := slack.NewAccessory(coverElement)
+	if len(bookSummary.Cover) > 0 {
+		coverElement := slack.NewImageBlockElement(bookSummary.Cover, bookSummary.Title)
+		infoAccessory := slack.NewAccessory(coverElement)
+		infoSection = slack.NewSectionBlock(nil, infoFields, infoAccessory)
+	} else {
+		infoSection = slack.NewSectionBlock(nil, infoFields, nil)
+	}
 
-	infoSection := slack.NewSectionBlock(nil, infoFields, infoAccessory)
 	return infoSection
 }
 

@@ -2,12 +2,15 @@
 package main
 
 import (
+	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/n-yU/labotGo/data"
 	"github.com/n-yU/labotGo/es"
 	"github.com/n-yU/labotGo/listen"
@@ -17,10 +20,17 @@ import (
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // labotGo
 func main() {
+	// コマンドラインオプション 処理
+	var isResetCode bool
+	flag.BoolVar(&isResetCode, "rc", false, "リセットコード設定")
+	flag.Parse()
+
+	// ロガー 設定
 	util.Logger = log.New(os.Stdout, "[labotGo] ", log.Ldate|log.Ltime)
 
 	// 実行ファイルディレクトリ 取得
@@ -32,8 +42,22 @@ func main() {
 	util.Dir = filepath.Dir(exePath)
 	util.Logger.Println("実行ファイルディレクトリ:", util.Dir)
 
+	// リセットコード設定モード
+	if isResetCode {
+		util.Logger.Println("リセットコード設定モードで起動しました")
+		setResetCode()
+		return
+	}
+
 	// 環境変数 読み込み
 	util.LoadEnv()
+
+	// リセットコード 未設定 -> リセットコード設定モードへ移行
+	if !util.IsSetResetCode() {
+		util.Logger.Println("リセットコードが未設定のため，設定モードに移行します")
+		setResetCode()
+		return
+	}
 
 	// トークン 確認
 	appToken := os.Getenv("APP_TOKEN")
@@ -129,15 +153,6 @@ func main() {
 		}
 	}()
 
-	// 動作チェック
-	defaultCh := fmt.Sprintf("#%s", os.Getenv("DEFAULT_CHANNEL"))
-	if err := post.Start(defaultCh); err != nil {
-		util.Logger.Println("labotGo の起動に失敗しました")
-		util.Logger.Printf("Tips: labotGo は起動時に動作チェックのため，デフォルトチャンネル %s にも追加する必要があります\n", defaultCh)
-		util.Logger.Println("Tips: デフォルトチャンネルは .env から変更することもできます")
-		util.Logger.Fatal(err)
-	}
-
 	// 全ユーザIDリスト 取得
 	util.AllUserIDs = data.GetAllUserIDs(util.DeveloperMode)
 
@@ -165,7 +180,7 @@ func main() {
 	if isFirstRun, err := checkFirstRun(); isFirstRun {
 		if err != nil {
 			util.Logger.Println("初回起動のため，データファイルの生成を試みましたが失敗しました")
-			util.Logger.Println("詳しくは次のエラーを確認してください")
+			util.Logger.Println(util.ReferErrorDetail)
 			util.Logger.Fatal(err)
 		}
 		util.Logger.Println("初回起動のため，以下の2つのデータファイルを生成しました")
@@ -182,17 +197,65 @@ func main() {
 	// Elasticsearch: 書籍 index チェック
 	if isBookIndex, err := es.InitializeIndex(util.EsBookIndexName, util.EsBookMappingPath()); !isBookIndex {
 		if err != nil {
-			util.Logger.Printf("index \"%s\" の作成を試みましたが失敗しました\n", util.EsBookIndexName)
-			util.Logger.Println("詳しくは次のエラーを確認してください")
+			util.Logger.Println(util.ReferErrorDetail)
 			util.Logger.Fatal(err)
 		}
-		util.Logger.Printf("%s index を作成しました\n", util.EsBookIndexName)
 	}
 
+	// 動作チェック
+	defaultCh := fmt.Sprintf("#%s", os.Getenv("DEFAULT_CHANNEL"))
+	if err := post.Start(defaultCh); err != nil {
+		util.Logger.Println("labotGo の起動に失敗しました")
+		util.Logger.Printf("Tips: labotGo は起動時に動作チェックのため，デフォルトチャンネル %s にも追加する必要があります\n", defaultCh)
+		util.Logger.Println("Tips: デフォルトチャンネルは .env から変更することもできます")
+		util.Logger.Fatal(err)
+	}
 	util.Logger.Printf("labotGo %s を起動しました\n", util.Version)
 
 	// Socket Mode
 	util.SocketModeClient.Run()
+}
+
+// リセットコード 設定
+func setResetCode() {
+	scanner := bufio.NewScanner(os.Stdin)
+
+	// コード入力
+	fmt.Print("リセットコードを入力してください（8文字以上）: ")
+	scanner.Scan()
+	code := scanner.Text()
+	for len(code) < 8 {
+		fmt.Print("8文字以上のリセットコードを入力してください: ")
+		scanner.Scan()
+		code = scanner.Text()
+	}
+
+	// 確認入力
+	fmt.Print("確認のため同じリセットコードを入力してください: ")
+	scanner.Scan()
+	codeConfirm := scanner.Text()
+	for code != codeConfirm {
+		fmt.Print("リセットコードが一致しないため再度入力してください: ")
+		scanner.Scan()
+		codeConfirm = scanner.Text()
+	}
+
+	// コードハッシュ化
+	hashed, _ := bcrypt.GenerateFromPassword([]byte(code), 10)
+
+	// envファイル 書き込み
+	env, err := godotenv.Read(util.EnvPath())
+	env["RESET_CODE"] = string(hashed)
+	if err == nil {
+		err = godotenv.Write(env, util.EnvPath())
+	}
+
+	if err != nil {
+		util.Logger.Println("次のエラーにより，リセットコードの設定に失敗しました")
+		util.Logger.Fatal(err)
+	} else {
+		util.Logger.Println("リセットコードの設定に成功しました")
+	}
 }
 
 // 初回起動チェック

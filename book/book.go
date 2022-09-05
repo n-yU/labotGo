@@ -18,9 +18,11 @@ import (
 func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, ok bool) {
 	switch subType, subValues := cmdValues[0], cmdValues[1:]; subType {
 	case "register":
-		blocks, ok = getBlockRegisterRequest(), true
+		blocks, ok = getBlocksRegisterRequest(), true
 	case "delete":
-		blocks, ok = getBlockDeleteRequest(), true
+		blocks, ok = getBlocksDeleteRequest(), true
+	case "reset":
+		blocks, ok = getBlocksResetRequest(), true
 	default:
 		text := post.ErrText(fmt.Sprintf("コマンド %s team *%s* %s を使用することはできません", util.Cmd, subType, strings.Join(subValues, " ")))
 		blocks, ok = post.SingleTextBlock(text), false
@@ -42,6 +44,8 @@ func Action(actionID string, callback slack.InteractionCallback) (err error) {
 	case strings.HasPrefix(actionID, aid.RegisterBook+"_"):
 		ISBN := strings.Split(actionID, "_")[1]
 		blocks = RegisterBook(actionUserID, callback.BlockActionState.Values, ISBN)
+	case actionID == aid.ResetBook:
+		blocks = ResetBook(actionUserID, callback.BlockActionState.Values)
 	}
 
 	if len(blocks) > 0 {

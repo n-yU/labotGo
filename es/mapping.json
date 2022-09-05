@@ -19,7 +19,8 @@
                     ]
                 }
             }
-        }
+        },
+        "refresh_interval": "1ms"
     },
     "mappings": {
         "doc":{

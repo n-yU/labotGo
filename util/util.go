@@ -29,6 +29,7 @@ const (
 	TipsMemberTeam       = "*labotGo* に追加されたユーザを `メンバー` とし， `メンバー` のグループを `チーム` と呼びます"
 	TipsMasterTeam       = "チーム `all` は全メンバーが入るチームです．編集・削除などの各操作はできません．"
 	ErrorSynchronizeData = "メンバーデータとチームデータの同期に失敗しました"
+	ReferErrorDetail     = "詳しくは次のエラーを確認してください"
 
 	DataLoadErr   = "dataLoadError"
 	DataReloadErr = "dataReloadError"
@@ -80,11 +81,15 @@ func EsBookMappingPath() string {
 	return fmt.Sprintf("%s/es/mapping.json", Dir)
 }
 
+// getter: 環境変数パス
+func EnvPath() string {
+	return fmt.Sprintf("%s/.env", Dir)
+}
+
 // 環境変数 読み込み
 func LoadEnv() {
 	// ref.) https://zenn.dev/a_ichi1/articles/c9f3870350c5e2
-	envPath := fmt.Sprintf("%s/.env", Dir)
-	if err := godotenv.Load(envPath); err != nil {
+	if err := godotenv.Load(EnvPath()); err != nil {
 		Logger.Println("環境変数の読み込みに失敗しました")
 		Logger.Fatal(err)
 	}
@@ -144,4 +149,9 @@ func UniqueConcatSlice(slice1, slice2 []string) []string {
 func FormatTime(t time.Time) string {
 	tz, _ := time.LoadLocation("Asia/Tokyo")
 	return t.In(tz).Format("2006/01/02 15:04:05")
+}
+
+// リセットコード 設定有無
+func IsSetResetCode() bool {
+	return os.Getenv("RESET_CODE") != "rc"
 }

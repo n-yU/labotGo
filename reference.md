@@ -7,7 +7,6 @@
 - [DockerコンテナでElasticSearchを起動する（docker-compose） - Qiita](https://qiita.com/hiroky_814/items/7a8ddddd472d47f6435b)
 - [GoからDocker上のElasticsearchに接続する際にネットワークのSniffingでハマった - 🤖](https://kotaroooo0-dev.hatenablog.com/entry/docker-es-network)
 
-
 ## Golang
 - [スターティングGo言語（松尾 愛賀）｜翔泳社の本](https://www.shoeisha.co.jp/book/detail/9784798142418)
 - [go.modとgo.sumの読み方](https://zenn.dev/ryo_yamaoka/articles/595cf9e69229f9)
@@ -22,6 +21,8 @@
 - [golang で汎用的な任意数のオプションを取るメソッドの作り方 | Hori Blog](https://hori-ryota.com/blog/golang-highly-versatile-method-with-arbitary-options/)
 - [Go言語: ファイルの存在をちゃんとチェックする実装? - Qiita](https://qiita.com/suin/items/b9c0f92851454dc6d461)
 - [Go言語でファイル操作: ファイルを作って書き込む - Qiita](https://qiita.com/suin/items/7eb4fc405ac73846a9b1)
+- [【Go】bcrypt を使ってパスワードのハッシュ値を生成して検証する](https://zenn.dev/kou_pg_0131/articles/go-digest-and-compare-by-bcrypt)
+- [go bcryptのコードを読む - Qiita](https://qiita.com/butterv/items/ca330d27fe51a6bf7a3d)
 
 ## slack-go
 - [slack-go/slack: Slack API in Go - community-maintained fork created by the original author, @nlopes](https://github.com/slack-go/slack)
@@ -58,3 +59,5 @@
 - [はじめての Elasticsearch - Qiita](https://qiita.com/nskydiving/items/1c2dc4e0b9c98d164329)
 - [Python Elasticsearch 基本的な使い方まとめ - Qiita](https://qiita.com/satto_sann/items/8a63761bbfd6542bb9a2)
 - [【Go, Elasticsearch】ElasticSearchクライアント olivere を使ってみる(CRUD)](https://zenn.dev/a_ichi1/articles/555c8eed11fdad)
+- [Elasticsearch基礎用語集 - Qiita](https://qiita.com/NagaiKoki/items/d9435c77f28a289b8381)
+- [Elasticsearchに実際に書き込むテストなんかで「indexへの反映に時間がかかって困る〜〜」って時 - その手の平は尻もつかめるさ](https://moznion.hatenadiary.com/entry/2018/10/11/190809)
