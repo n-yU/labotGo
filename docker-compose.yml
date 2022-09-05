@@ -3,7 +3,7 @@ version: '3.8'
 services:
   elasticsearch:
     container_name: labotGo_es
-    build: ./elasticsearch
+    build: ./es
     environment:
       - discovery.type=single-node
       - cluster.name=elasticsearch
@@ -17,7 +17,7 @@ services:
       - 9200:9200
       - 9300:9300
     volumes:
-      - ./elasticsearch:/usr/share/elasticsearch/data
+      - ./es:/usr/share/elasticsearch/data
     networks:
       - esnet
 

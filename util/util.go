@@ -38,7 +38,8 @@ const (
 
 	OpenBD = "https://api.openbd.jp/v1/get"
 
-	EsURL = "http://elasticsearch:9200"
+	EsURL           = "http://elasticsearch:9200"
+	EsBookIndexName = "book"
 )
 
 var (
@@ -46,8 +47,8 @@ var (
 	Api              *slack.Client
 	SocketModeClient *socketmode.Client
 
-	EsClient  *elastic.Client
-	EsVersion string
+	EsClient  *elastic.Client // Elasticsearch クライアント
+	EsVersion string          // Elasticsearch バージョン
 
 	Dir          string   // 実行ファイルパスディレクトリ
 	AllUserIDs   []string // ワークスペース全ユーザID
@@ -69,8 +70,14 @@ func TipsMasterUser() string {
 	return fmt.Sprintf("ユーザ <@%s> はマスターメンバーです．編集・削除などの各操作はできません．", MasterUserID)
 }
 
+// getter: チームリスト Tips
 func TipsTeamList() string {
 	return fmt.Sprintf("チームの一覧を確認するには `%s team list` を実行してください", Cmd)
+}
+
+// getter: index:"book" マッピングパス
+func EsBookMappingPath() string {
+	return fmt.Sprintf("%s/es/mapping.json", Dir)
 }
 
 // 環境変数 読み込み

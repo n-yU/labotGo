@@ -18,4 +18,4 @@
 .env
 /data/*.yml
 !/labotGo.exe
-/elasticsearch/nodes
+/es/nodes

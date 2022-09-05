@@ -6,17 +6,12 @@ import (
 	"strings"
 )
 
-// 商品付帯項目
-type TextContent []struct {
-	Text            string `json:"Text"`
-	TextType        string `json:"TextType"`
-	ContentAudience string `json:"ContentAudience"`
-}
-
-// JPRO-onix準拠項目
+// JPRO-onix 準拠項目
 type BookOnix struct {
 	CollateralDetail struct {
-		TextContent `json:"TextContent"`
+		TextContent []struct {
+			Text string `json:"Text"`
+		} `json:"TextContent"`
 	} `json:"CollateralDetail"`
 }
 

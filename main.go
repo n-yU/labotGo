@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/n-yU/labotGo/data"
+	"github.com/n-yU/labotGo/es"
 	"github.com/n-yU/labotGo/listen"
 	"github.com/n-yU/labotGo/post"
 	"github.com/n-yU/labotGo/util"
@@ -136,7 +137,6 @@ func main() {
 		util.Logger.Println("Tips: デフォルトチャンネルは .env から変更することもできます")
 		util.Logger.Fatal(err)
 	}
-	util.Logger.Printf("labotGo %s を起動しました\n", util.Version)
 
 	// 全ユーザIDリスト 取得
 	util.AllUserIDs = data.GetAllUserIDs(util.DeveloperMode)
@@ -162,14 +162,13 @@ func main() {
 	util.Logger.Printf("Elasticsearch バージョン %s\n", util.EsVersion)
 
 	// 初回起動チェック（データファイル生成）
-	isFirstRun, err := checkFirstRun()
-	if isFirstRun {
+	if isFirstRun, err := checkFirstRun(); isFirstRun {
 		if err != nil {
 			util.Logger.Println("初回起動のため，データファイルの生成を試みましたが失敗しました")
 			util.Logger.Println("詳しくは次のエラーを確認してください")
 			util.Logger.Fatal(err)
 		}
-		util.Logger.Println("初回起動のため，以下のデータファイルを生成しました")
+		util.Logger.Println("初回起動のため，以下の2つのデータファイルを生成しました")
 		util.Logger.Printf("- メンバーデータ: %s\n", util.MemberDataPath())
 		util.Logger.Printf("- チームデータ  : %s\n", util.TeamDataPath())
 	} else {
@@ -179,6 +178,18 @@ func main() {
 		}
 	}
 	util.Logger.Println("Tips: ボットが正常に動作しなくなる恐れがあるため，メンバー／チームデータは直接編集しないでください")
+
+	// Elasticsearch: 書籍 index チェック
+	if isBookIndex, err := es.InitializeIndex(util.EsBookIndexName, util.EsBookMappingPath()); !isBookIndex {
+		if err != nil {
+			util.Logger.Printf("index \"%s\" の作成を試みましたが失敗しました\n", util.EsBookIndexName)
+			util.Logger.Println("詳しくは次のエラーを確認してください")
+			util.Logger.Fatal(err)
+		}
+		util.Logger.Printf("%s index を作成しました\n", util.EsBookIndexName)
+	}
+
+	util.Logger.Printf("labotGo %s を起動しました\n", util.Version)
 
 	// Socket Mode
 	util.SocketModeClient.Run()
