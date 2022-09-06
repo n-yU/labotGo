@@ -24,6 +24,7 @@
 - [【Go】bcrypt を使ってパスワードのハッシュ値を生成して検証する](https://zenn.dev/kou_pg_0131/articles/go-digest-and-compare-by-bcrypt)
 - [go bcryptのコードを読む - Qiita](https://qiita.com/butterv/items/ca330d27fe51a6bf7a3d)
 - [Goでのエラー判別 - Qiita](https://qiita.com/minoritea/items/94feb33b61c5fdcc6105)
+- [Why no max/min function for integer in GoLang | Pixelstech.net](https://www.pixelstech.net/article/1559993656-Why-no-max-min-function-for-integer-in-GoLang)
 
 ## slack-go
 - [slack-go/slack: Slack API in Go - community-maintained fork created by the original author, @nlopes](https://github.com/slack-go/slack)

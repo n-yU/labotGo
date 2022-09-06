@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 
 	"github.com/n-yU/labotGo/data"
 	"github.com/n-yU/labotGo/util"
@@ -136,6 +137,7 @@ func PutDocument(body interface{}) (err error) {
 		if err != nil {
 			util.Logger.Printf("index \"%s\" - type \"%s\" への document 追加に失敗しました\n", index, type_)
 			util.Logger.Println(util.ReferErrorDetail)
+			util.Logger.Println(err)
 			return err
 		}
 		util.Logger.Printf("index \"%s\" - type \"%s\" への document 追加に成功しました（ID: %s）\n", doc.Index, doc.Type, doc.Id)
@@ -173,6 +175,7 @@ func DeleteDocument(body interface{}) (err error) {
 		if err != nil {
 			util.Logger.Printf("index \"%s\" - type \"%s\" への document 削除に失敗しました\n", index, type_)
 			util.Logger.Println(util.ReferErrorDetail)
+			util.Logger.Println(err)
 			return err
 		}
 		util.Logger.Printf("index \"%s\" - type \"%s\" への document 削除に成功しました（ID: %s）\n", doc.Index, doc.Type, doc.Id)
@@ -183,4 +186,45 @@ func DeleteDocument(body interface{}) (err error) {
 	}
 
 	return err
+}
+
+// document: 検索
+func SearchDocument(body interface{}, query string, n int) (results interface{}, err error) {
+	var (
+		index        string
+		searchResult *elastic.SearchResult
+	)
+	ctx := context.Background()
+
+	// body の型から index 決定
+	switch body.(type) {
+	case data.BookSummary:
+		// 書籍サマリ -> book
+		var bookSummaryResults []data.BookSummary
+		index = util.EsBookIndex
+		util.Logger.Printf("index \"%s\" 内の document 検索を試みます\n", index)
+
+		// 書籍検索
+		q := elastic.NewMatchQuery("content", query)
+		searchResult, err = util.EsClient.Search().Index(index).Query(q).From(0).Size(n).Do(ctx)
+		if err != nil {
+			util.Logger.Printf("index \"%s\" 内の document 検索に失敗しました\n", index)
+			util.Logger.Println(util.ReferErrorDetail)
+			util.Logger.Println(err)
+			return bookSummaryResults, err
+		}
+
+		// 検索結果を書籍サマリ形式で格納
+		for _, doc := range searchResult.Each(reflect.TypeOf(body)) {
+			bookSummaryResults = append(bookSummaryResults, doc.(data.BookSummary))
+		}
+		results = bookSummaryResults
+	default:
+		// 未定義構造体
+		err = errors.New(fmt.Sprintf("%T 型の body はインデックス内検索に対応していません", body))
+		return results, err
+	}
+
+	util.Logger.Printf("ヒット数: %d 件（検索実行時間: %d ms）\n", searchResult.TotalHits(), searchResult.TookInMillis)
+	return results, err
 }

@@ -23,8 +23,8 @@ type BookSummary struct {
 	Pubdate    string `json:"pubdate"`
 	Cover      string `json:"cover"`
 	Authors    string `json:"author"`
-	PubdateYMD string
-	Content    string
+	PubdateYMD string `json:"pubdateYMD"`
+	Content    string `json:"content"`
 }
 
 // 書籍

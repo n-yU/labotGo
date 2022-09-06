@@ -17,6 +17,17 @@ func TipsIBSNSection() *slack.ContextBlock {
 	return tipsSection
 }
 
+// 定型セクション: search コマンド Tips
+func TipsSearchSection() *slack.ContextBlock {
+	tipsText := []string{
+		fmt.Sprintf("*書籍検索コマンド*: `%s book search キーワード 最大表示数`", util.Cmd),
+		"複数のキーワードで検索する場合は `_` を使用してください（例: `Python_機械学習` ）",
+		"最大表示数は省略できます．省略時の最大表示数は *5* です．",
+	}
+	tipsSection := TipsSection(tipsText)
+	return tipsSection
+}
+
 // 定型セクション: ISBNコード入力
 func InputISBNSection(actionID string) *slack.InputBlock {
 	inputSectionText := TxtBlockObj(util.PlainText, "ISBNコード")
@@ -31,7 +42,6 @@ func InputISBNSection(actionID string) *slack.InputBlock {
 // 定型セクション: 書籍情報
 func InfoBookSection(bookSummary data.BookSummary) (infoSection *slack.SectionBlock) {
 	// 書籍情報
-	util.Logger.Printf("%+v\n", bookSummary)
 	titleField := TxtBlockObj(util.Markdown, fmt.Sprintf("タイトル:\n*%s*", bookSummary.Title))
 	publisherField := TxtBlockObj(util.Markdown, fmt.Sprintf("出版社:\n*%s*", bookSummary.Publisher))
 	pubdateField := TxtBlockObj(util.Markdown, fmt.Sprintf("出版日:\n*%s*", bookSummary.PubdateYMD))

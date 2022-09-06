@@ -23,6 +23,8 @@ func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, o
 		blocks, ok = getBlocksResetRequest(), true
 	case "delete":
 		blocks, ok = getBlocksDeleteRequest(), true
+	case "search":
+		blocks, ok = getBlocksSearch(subValues), true
 	default:
 		text := post.ErrText(fmt.Sprintf("コマンド %s team *%s* %s を使用することはできません", util.Cmd, subType, strings.Join(subValues, " ")))
 		blocks, ok = post.SingleTextBlock(text), false
