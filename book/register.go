@@ -28,7 +28,7 @@ func getBlocksRegisterRequest() (blocks []slack.Block) {
 	ISBNInputSection := post.InputISBNSection(aid.RegisterBookInputISBN)
 
 	// ブロック: 確認ボタン
-	actionBtnBlock := post.BtnOK("確認", aid.RegisterBookRequest)
+	actionBtnBlock := post.CustomBtnSection("OK", "確認", aid.RegisterBookRequest)
 
 	blocks = []slack.Block{
 		headerSection, headerTipsSection, util.Divider(), ISBNInputSection, actionBtnBlock,
@@ -99,7 +99,7 @@ func RegisterBookConfirm(actionUserID string, blockActions map[string]map[string
 
 	// ブロック: 登録ボタン
 	actionBtnActionID := strings.Join([]string{aid.RegisterBook, ISBN}, "_")
-	actionBtnBlock := post.BtnOK("登録", actionBtnActionID)
+	actionBtnBlock := post.CustomBtnSection("OK", "登録", actionBtnActionID)
 
 	blocks = []slack.Block{headerSection, headerTipsSection, util.Divider(), infoBookSection, actionBtnBlock}
 	return blocks
@@ -110,7 +110,7 @@ func RegisterBook(actionUserID string, blockActions map[string]map[string]slack.
 	util.Logger.Printf("書籍登録 (from %s): %s %+v\n", actionUserID, ISBN, blockActions)
 	bookSummary, ok := data.BookBuffer[actionUserID][ISBN]
 	if !ok {
-		text := post.ErrText(fmt.Sprintf("指定した書籍（ISBN: %s）は既に登録が完了しています\n", ISBN))
+		text := post.ErrText(fmt.Sprintf("指定した書籍（ISBN: %s）は既に登録が完了しています", ISBN))
 		blocks = post.SingleTextBlock(text)
 		return blocks
 	}
@@ -120,13 +120,16 @@ func RegisterBook(actionUserID string, blockActions map[string]map[string]slack.
 		var text string
 		switch err {
 		case es.ErrDocAlreadyExist:
-			text = post.ErrText(fmt.Sprintf("指定した書籍（ISBN: %s）は既に登録されています\n", ISBN))
+			text = post.ErrText(fmt.Sprintf("指定した書籍（ISBN: %s）は既に登録されています", ISBN))
 		default:
 			text = post.ErrText(fmt.Sprintf("次のエラーにより書籍登録に失敗しました\n\n%v", err))
 		}
 		blocks = post.SingleTextBlock(text)
 		return blocks
 	}
+
+	// 書籍DB追加
+	bookSummary.AddDB()
 
 	// ブロック: ヘッダ
 	headerText := post.ScsText(fmt.Sprintf("書籍: *%s* - ISBN: %s の登録に成功しました", bookSummary.Title, bookSummary.ISBN))
@@ -135,12 +138,12 @@ func RegisterBook(actionUserID string, blockActions map[string]map[string]slack.
 	// ブロック: ヘッダ Tips
 	headerTipsText := []string{
 		"上記フォームは ISBNコード の入力欄を書き換えることで再利用できます",
-		fmt.Sprintf("現在 *%d* 冊の書籍が *labotGo* に登録されています\n", es.CountDoc(util.EsBookIndex)),
+		fmt.Sprintf("現在 *%d* 冊の書籍が *labotGo* に登録されています", es.CountDoc(util.EsBookIndex)),
 	}
 	headerTipsSection := post.TipsSection(headerTipsText)
 	blocks = []slack.Block{headerSection, headerTipsSection}
 
-	util.Logger.Println(fmt.Sprintf("書籍（ISBN: %s）の登録に成功しました\n", bookSummary.ISBN))
+	util.Logger.Printf("書籍（ISBN: %s）の登録に成功しました\n", bookSummary.ISBN)
 	delete(data.BookBuffer[actionUserID], ISBN)
 	return blocks
 }

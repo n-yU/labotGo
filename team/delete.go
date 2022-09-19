@@ -67,7 +67,7 @@ func DeleteTeamConfirm(actionUserID string, blockActions map[string]map[string]s
 	profImages := md.GetProfImages(teamUserIDs)
 	teamInfoSections := post.InfoTeamSections(teamName, teamName, profImages, teamUserIDs, teamUserIDs, nil)
 	actionBtnActionId := strings.Join([]string{aid.DeleteTeam, teamName}, "_")
-	actionBtnBlock := post.BtnOK("削除", actionBtnActionId)
+	actionBtnBlock := post.CustomBtnSection("OK", "削除", actionBtnActionId)
 
 	blocks = []slack.Block{headerSection}
 	for _, teamInfoSec := range teamInfoSections {

@@ -87,7 +87,8 @@ func Command(cmd slack.SlashCommand) error {
 			text := post.ErrText(fmt.Sprintf("%s *%s* には1つ以上の引数を与える必要があります", util.Cmd, cmdType))
 			blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
 		} else {
-			blocks, responseType, ok = book.GetBlocks(cmdValues)
+			cmdUserID := cmd.UserID
+			blocks, responseType, ok = book.GetBlocks(cmdValues, cmdUserID)
 		}
 	default:
 		text := post.ErrText(fmt.Sprintf("コマンド %s *%s* を使用することはできません\n", util.Cmd, cmdType))

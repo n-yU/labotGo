@@ -76,7 +76,7 @@ func getBlockEditTeamInfo(actionUserID string, blockActions map[string]map[strin
 	membersSection := post.SelectMembersSection(md.GetAllEditedUserIDs(), aid.EditTeamSelectMembers, teamUserIDs, true, true)
 	// ブロック: 変更ボタン
 	actionBtnActionId := strings.Join([]string{aid.EditTeam, teamName}, "_")
-	actionBtnBlock := post.BtnOK("変更", actionBtnActionId)
+	actionBtnBlock := post.CustomBtnSection("OK", "変更", actionBtnActionId)
 
 	blocks := []slack.Block{headerSection, headerTipsSection, util.Divider(), nameSection, membersSection, actionBtnBlock}
 	return blocks

@@ -7,4 +7,7 @@ ADD . /go/src/app
 COPY go.mod go.sum ./
 RUN go mod download
 
-RUN apk update && apk add git
+RUN apk update
+RUN apk add git gcc musl-dev
+
+ENV CGO_ENABLED=1

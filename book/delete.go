@@ -2,9 +2,7 @@
 package book
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"strings"
 
 	"github.com/n-yU/labotGo/aid"
@@ -28,7 +26,7 @@ func getBlocksDeleteRequest() (blocks []slack.Block) {
 	ISBNInputSection := post.InputISBNSection(aid.DeleteBookInputISBN)
 
 	// ブロック: 確認ボタン
-	actionBtnBlock := post.BtnOK("確認", aid.DeleteBookRequest)
+	actionBtnBlock := post.CustomBtnSection("OK", "確認", aid.DeleteBookRequest)
 
 	blocks = []slack.Block{
 		headerSection, headerTipsSection, util.Divider(), ISBNInputSection, actionBtnBlock,
@@ -38,7 +36,6 @@ func getBlocksDeleteRequest() (blocks []slack.Block) {
 
 // 書籍削除確認（書籍情報取得）
 func DeleteBookConfirm(actionUserID string, blockActions map[string]map[string]slack.BlockAction) (blocks []slack.Block) {
-	var books data.Books
 	util.Logger.Printf("書籍削除リクエスト (from %s): %+v\n", actionUserID, blockActions)
 
 	// ISBNコード 取得
@@ -51,34 +48,11 @@ func DeleteBookConfirm(actionUserID string, blockActions map[string]map[string]s
 		return blocks
 	}
 
-	// 書籍情報 取得（from OpenBD）
-	res, err := requestOpenBD(ISBN)
-	if err != nil || res.StatusCode != 200 {
-		return post.ErrBlocksRequestOpenBD(err, res)
-	}
-
-	// レスポンスボディ 読み込み
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return post.ErrBlocksReadResponseBody(err)
-	}
-
-	// 書籍情報 読み込み
-	if err := json.Unmarshal(body, &books); err != nil {
-		return post.ErrBlocksLoadBookInfo(err)
-	}
-
-	// 書籍情報有無 確認
-	if blocks := post.UnknownBookBlock(books[0], ISBN); len(blocks) > 0 {
+	// 書籍サマリ 取得
+	bookSummary, blocks := getBookSummary(ISBN)
+	if len(blocks) > 0 {
 		return blocks
 	}
-
-	// 書籍サマリ 取得
-	(&books[0].BookSummary).SetPubdateYMD()
-	books[0].SetContent()
-	bookSummary := books[0].BookSummary
-	util.Logger.Printf("書籍情報: %s %s %s\n", bookSummary.Title, bookSummary.Publisher, bookSummary.Authors)
 
 	// 書籍サマリ 一時保存
 	if _, ok := data.BookBuffer[actionUserID]; !ok {
@@ -99,7 +73,7 @@ func DeleteBookConfirm(actionUserID string, blockActions map[string]map[string]s
 
 	// ブロック: 削除ボタン
 	actionBtnActionID := strings.Join([]string{aid.DeleteBook, ISBN}, "_")
-	actionBtnBlock := post.BtnOK("削除", actionBtnActionID)
+	actionBtnBlock := post.CustomBtnSection("OK", "削除", actionBtnActionID)
 
 	blocks = []slack.Block{headerSection, headerTipsSection, util.Divider(), infoBookSection, actionBtnBlock}
 	return blocks

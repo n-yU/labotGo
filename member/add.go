@@ -46,7 +46,7 @@ func getBlockAdd() []slack.Block {
 	teamsSelectSection := post.SelectTeamsSection(td.GetAllNames(), aid.AddMemberSelectTeams, []string{util.MasterTeamName}, true)
 
 	// ブロック: 追加ボタン
-	actionBtnBlock := post.BtnOK("追加", aid.AddMember)
+	actionBtnBlock := post.CustomBtnSection("OK", "追加", aid.AddMember)
 
 	blocks := []slack.Block{
 		headerSection, headerTipsSection, util.Divider(), userSelectSection, teamsSelectSection, actionBtnBlock,

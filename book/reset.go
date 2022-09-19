@@ -26,7 +26,7 @@ func getBlocksResetRequest() (blocks []slack.Block) {
 	CodeInputSection := post.InputResetCodeSection(aid.ResetBookInputCode)
 
 	// ブロック: リセットボタン
-	actionBtnBlock := post.BtnOK("リセット", aid.ResetBook)
+	actionBtnBlock := post.CustomBtnSection("OK", "リセット", aid.ResetBook)
 
 	blocks = []slack.Block{headerSection, headerTipsSection, util.Divider(), CodeInputSection, actionBtnBlock}
 	return blocks

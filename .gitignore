@@ -16,6 +16,7 @@
 
 .DS_Store
 .env
-/data/*.yml
 !/labotGo.exe
+/data/*.yml
+/data/*.db
 /es/nodes

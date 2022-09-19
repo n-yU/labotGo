@@ -3,6 +3,7 @@ package es
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -143,7 +144,7 @@ func PutDocument(body interface{}) (err error) {
 		util.Logger.Printf("index \"%s\" - type \"%s\" への document 追加に成功しました（ID: %s）\n", doc.Index, doc.Type, doc.Id)
 	default:
 		// 未定義構造体
-		err = errors.New(fmt.Sprintf("%T 型の body はインデックスへの追加に対応していません", body))
+		err = fmt.Errorf("%T 型の body はインデックスへの追加に対応していません", body)
 		return err
 	}
 
@@ -181,7 +182,7 @@ func DeleteDocument(body interface{}) (err error) {
 		util.Logger.Printf("index \"%s\" - type \"%s\" への document 削除に成功しました（ID: %s）\n", doc.Index, doc.Type, doc.Id)
 	default:
 		// 未定義構造体
-		err = errors.New(fmt.Sprintf("%T 型の body はインデックスへの追加に対応していません", body))
+		err = fmt.Errorf("%T 型の body はインデックスへの追加に対応していません", body)
 		return err
 	}
 
@@ -221,10 +222,46 @@ func SearchDocument(body interface{}, query string, n int) (results interface{},
 		results = bookSummaryResults
 	default:
 		// 未定義構造体
-		err = errors.New(fmt.Sprintf("%T 型の body はインデックス内検索に対応していません", body))
+		err = fmt.Errorf("%T 型の body はインデックス内検索に対応していません", body)
 		return results, err
 	}
 
 	util.Logger.Printf("ヒット数: %d 件（検索実行時間: %d ms）\n", searchResult.TotalHits(), searchResult.TookInMillis)
 	return results, err
+}
+
+// document: 取得
+func GetDocument(body interface{}) (interface{}, error) {
+	var (
+		index, type_ string
+		err          error
+	)
+	ctx := context.Background()
+
+	// body の型から index,type 決定
+	switch body.(type) {
+	case data.BookSummary:
+		// 書籍サマリ -> book
+		bookSummary := body.(data.BookSummary)
+		index, type_ = util.EsBookIndex, util.EsBookType
+		util.Logger.Printf("index \"%s\" - type \"%s\" への document 取得を試みます（ISBN: %s）\n", index, type_, bookSummary.ISBN)
+
+		// 書籍取得
+		result, err := util.EsClient.Get().Index(index).Type(type_).Id(bookSummary.ISBN).Do(ctx)
+		if err != nil {
+			util.Logger.Printf("index \"%s\" - type \"%s\" からの document 取得に失敗しました\n", index, type_)
+			util.Logger.Println(util.ReferErrorDetail)
+			util.Logger.Println(err)
+		} else if !result.Found {
+			util.Logger.Printf("ISBN: %s は index \"%s\" - type \"%s\" で見つかりませんでした\n", bookSummary.ISBN, index, type_)
+		} else {
+			err = json.Unmarshal(result.Source, &bookSummary)
+			return bookSummary, err
+		}
+	default:
+		// 未定義構造体
+		err = fmt.Errorf("%T 型の body はドキュメント取得に対応していません", body)
+	}
+
+	return body, err
 }

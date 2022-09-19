@@ -45,6 +45,24 @@ func NewButtonBlockElementWithStyle(actionID, value string, text *slack.TextBloc
 	}
 }
 
+// 定型ブロック要素: カスタムボタン
+func CustomBtn(type_ string, text string, actionID string) (btn *slack.ButtonBlockElement) {
+	var style slack.Style
+	btnText := TxtBlockObj(util.PlainText, text)
+
+	switch type_ {
+	case "OK":
+		style = slack.StylePrimary
+	case "NG":
+		style = slack.StyleDanger
+	case "DEF":
+		style = slack.StyleDefault
+	}
+
+	btn = NewButtonBlockElementWithStyle(actionID, "", btnText, style)
+	return btn
+}
+
 // 定型ブロックオブジェクト: slack.NewTextBlockObject()
 func TxtBlockObj(elementType string, text string) *slack.TextBlockObject {
 	return slack.NewTextBlockObject(elementType, text, false, false)
@@ -86,10 +104,9 @@ func TipsSection(tips []string) *slack.ContextBlock {
 	return tipsSection
 }
 
-// 定型セクション: OKボタン
-func BtnOK(text string, actionID string) *slack.ActionBlock {
-	btnText := TxtBlockObj(util.PlainText, text)
-	btn := NewButtonBlockElementWithStyle(actionID, "", btnText, slack.StylePrimary)
+// 定型セクション: カスタムボタンセクション
+func CustomBtnSection(type_ string, text string, actionID string) *slack.ActionBlock {
+	btn := CustomBtn(type_, text, actionID)
 	btnBlock := slack.NewActionBlock("", btn)
 	return btnBlock
 }
@@ -117,6 +134,7 @@ func ResetCodeValidateBlock(resetCode string) (blocks []slack.Block) {
 		headerSection := SingleTextSectionBlock(util.Markdown, headerText)
 		blocks = []slack.Block{headerSection}
 	} else {
+		return blocks
 	}
 
 	if len(blocks) > 0 {

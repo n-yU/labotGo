@@ -57,7 +57,7 @@ func DeleteMemberConfirm(actionUserID string, blockActions map[string]map[string
 		headerSection := post.SingleTextSectionBlock(util.Markdown, "*以下メンバーを削除しますか？*")
 		memberInfoSections := post.InfoMemberSection(md[userID].Image24, userID, memberTeamNames, memberTeamNames, nil)
 		actionBtnActionId := strings.Join([]string{aid.DeleteMember, userID}, "_")
-		actionBtnBlock := post.BtnOK("削除", actionBtnActionId)
+		actionBtnBlock := post.CustomBtnSection("OK", "削除", actionBtnActionId)
 
 		blocks = []slack.Block{headerSection, memberInfoSections[0], actionBtnBlock}
 	}

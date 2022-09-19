@@ -43,7 +43,7 @@ func getBlockAdd() (blocks []slack.Block) {
 	membersSection := post.SelectMembersSection(md.GetAllEditedUserIDs(), aid.AddTeamSelectMembers, []string{}, true, true)
 
 	// ブロック: 追加ボタン
-	actionBtnBlock := post.BtnOK("追加", aid.AddTeam)
+	actionBtnBlock := post.CustomBtnSection("OK", "追加", aid.AddTeam)
 
 	blocks = []slack.Block{headerSection, headerTipsSection, util.Divider(), nameSection, membersSection, actionBtnBlock}
 	return blocks

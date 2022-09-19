@@ -38,7 +38,7 @@ func getBlocksCustom() []slack.Block {
 		valueInputSection := ValueInputSection(aid.GroupCustomInputValue)
 
 		// ブロック: グルーピングボタン
-		actionBtnBlock := post.BtnOK("グルーピング", aid.GroupCustom)
+		actionBtnBlock := post.CustomBtnSection("OK", "グルーピング", aid.GroupCustom)
 
 		blocks := []slack.Block{
 			headerSection, headerTipsSection, util.Divider(),

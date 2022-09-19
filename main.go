@@ -3,6 +3,7 @@ package main
 
 import (
 	"bufio"
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/n-yU/labotGo/data"
 	"github.com/n-yU/labotGo/es"
 	"github.com/n-yU/labotGo/listen"
@@ -194,6 +196,21 @@ func main() {
 		}
 	}
 	util.Logger.Println("Tips: ボットが正常に動作しなくなる恐れがあるため，メンバー／チームデータは直接編集しないでください")
+
+	// DB接続
+	// os.Remove(util.DBPath())
+	if util.DB, err = sql.Open("sqlite3", util.DBPath()); err != nil {
+		util.Logger.Println("データベースへの接続時に以下のエラーが発生しました")
+		util.Logger.Fatal(err)
+	}
+	defer util.DB.Close()
+	util.Logger.Println("データベースへの接続に成功しました")
+
+	// テーブル作成
+	if err := data.CreateTables(); err != nil {
+		util.Logger.Println("データベースでのテーブル作成時に以下のエラーが発生しました")
+		util.Logger.Fatal(err)
+	}
 
 	// Elasticsearch: 書籍 index チェック
 	if isBookIndex, err := es.InitializeIndex(util.EsBookIndex, util.EsBookMappingPath()); !isBookIndex {

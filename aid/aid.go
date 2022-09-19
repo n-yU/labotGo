@@ -47,4 +47,6 @@ const (
 	DeleteBookInputISBN   = "BookDeleteBookInputISBN"
 	DeleteBookRequest     = "BookDeleteBookRequest"
 	BorrowBook            = "BookBorrowBook"
+	BorrowBookDeny        = "BookBorrowBookDeny"
+	ReturnBook            = "BookReturnBook"
 )

@@ -4,6 +4,8 @@ package data
 import (
 	"fmt"
 	"strings"
+
+	"github.com/n-yU/labotGo/util"
 )
 
 // JPRO-onix 準拠項目
@@ -17,8 +19,8 @@ type BookOnix struct {
 
 // 書籍サマリ
 type BookSummary struct {
-	Title      string `json:"title"`
 	ISBN       string `json:"isbn"`
+	Title      string `json:"title"`
 	Publisher  string `json:"publisher"`
 	Pubdate    string `json:"pubdate"`
 	Cover      string `json:"cover"`
@@ -53,7 +55,7 @@ func (b *Book) SetContent() {
 	var contentList []string
 
 	textContent := b.BookOnix.CollateralDetail.TextContent
-	if textContent != nil {
+	if len(textContent) > 0 {
 		for _, tc := range textContent {
 			contentList = append(contentList, strings.Replace(tc.Text, "\n", " ", -1))
 		}
@@ -63,4 +65,34 @@ func (b *Book) SetContent() {
 		"%s %s %s %s", b.BookSummary.Title, b.BookSummary.Publisher,
 		b.BookSummary.Authors, strings.Join(contentList, " "),
 	)
+}
+
+// DB: 書籍テーブル追加
+func (b *BookSummary) AddDB() error {
+	stmt, err := util.DB.Prepare("insert into books (ISBN, title, owner) values (?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(b.ISBN, b.Title, util.DefaultBookOwner())
+	return err
+}
+
+// DB: 書籍オーナー取得
+func (b *BookSummary) GetOwner() (owner string) {
+	stmt, _ := util.DB.Prepare("select owner from books where ISBN = ?")
+	defer stmt.Close()
+
+	stmt.QueryRow(b.ISBN).Scan(&owner)
+	return owner
+}
+
+// DB: 書籍オーナー変更
+func (b *BookSummary) ChangeOwner(newOwner string) (err error) {
+	stmt, _ := util.DB.Prepare("update books set owner = ? where ISBN = ?")
+	defer stmt.Close()
+
+	_, err = stmt.Exec(newOwner, b.ISBN)
+	return err
 }

@@ -41,7 +41,7 @@ func getBlocksTeam() []slack.Block {
 		valueInputSection := ValueInputSection(aid.GroupTeamInputValue)
 
 		// ブロック: グルーピングボタン
-		actionBtnBlock := post.BtnOK("グルーピング", aid.GroupTeam)
+		actionBtnBlock := post.CustomBtnSection("OK", "グルーピング", aid.GroupTeam)
 
 		blocks := []slack.Block{
 			headerSection, headerTipsSection, util.Divider(),

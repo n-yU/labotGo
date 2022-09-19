@@ -2,6 +2,7 @@
 package util
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -55,6 +56,8 @@ var (
 	Dir          string   // 実行ファイルパスディレクトリ
 	AllUserIDs   []string // ワークスペース全ユーザID
 	MasterUserID string   // マスターユーザID（labotGo ID）
+
+	DB *sql.DB // データベース
 )
 
 // getter: メンバーデータパス
@@ -85,6 +88,16 @@ func EsBookMappingPath() string {
 // getter: 環境変数パス
 func EnvPath() string {
 	return fmt.Sprintf("%s/.env", Dir)
+}
+
+// getter: DBパス
+func DBPath() string {
+	return fmt.Sprintf("%s/data/data.db", Dir)
+}
+
+// getter: デフォルト書籍オーナー
+func DefaultBookOwner() string {
+	return os.Getenv("DEFAULT_BOOK_OWNER")
 }
 
 // 環境変数 読み込み

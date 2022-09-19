@@ -15,7 +15,7 @@ import (
 )
 
 // 書籍検索
-func getBlocksSearch(values []string) (blocks []slack.Block) {
+func getBlocksSearch(values []string, cmdUserID string) (blocks []slack.Block) {
 	var (
 		bookSummary data.BookSummary
 		hitISBNs    []string
@@ -74,9 +74,29 @@ func getBlocksSearch(values []string) (blocks []slack.Block) {
 		hitISBNs = append(hitISBNs, bookSummary.ISBN)
 
 		searchInfoText := post.TxtBlockObj(util.Markdown, fmt.Sprintf("[%d] %s", i+1, bookSummary.ISBN))
-		borrowBtnText := post.TxtBlockObj(util.PlainText, "借りる")
-		searchInfoBorrowBtn := post.NewButtonBlockElementWithStyle(aid.BorrowBook, "", borrowBtnText, slack.StylePrimary)
-		searchInfoSection := slack.NewSectionBlock(searchInfoText, nil, slack.NewAccessory(searchInfoBorrowBtn))
+		bookOwner := bookSummary.GetOwner()
+		bookOwnerDisplay := fmt.Sprintf("%s（借りられます）", bookOwner)
+		if bookOwner != util.DefaultBookOwner() {
+			bookOwnerDisplay = fmt.Sprintf("<@%s>", bookOwner)
+		}
+		bookOwnerText := post.TxtBlockObj(util.Markdown, fmt.Sprintf("オーナー: %s", bookOwnerDisplay))
+		searchInfoFields := []*slack.TextBlockObject{searchInfoText, bookOwnerText}
+
+		// 図書館ボタン
+		var searchInfoBorrowBtn *slack.ButtonBlockElement
+		switch bookOwner {
+		case util.DefaultBookOwner():
+			searchInfoBorrowBtnActionID := strings.Join([]string{aid.BorrowBook, bookSummary.ISBN}, "_")
+			searchInfoBorrowBtn = post.CustomBtn("OK", "借りる", searchInfoBorrowBtnActionID)
+		case cmdUserID:
+			searchInfoBorrowBtnActionID := strings.Join([]string{aid.ReturnBook, bookSummary.ISBN}, "_")
+			searchInfoBorrowBtn = post.CustomBtn("DEF", "返却", searchInfoBorrowBtnActionID)
+		default:
+			searchInfoBorrowBtnActionID := strings.Join([]string{aid.BorrowBookDeny, bookSummary.ISBN}, "_")
+			searchInfoBorrowBtn = post.CustomBtn("NG", "貸出中", searchInfoBorrowBtnActionID)
+		}
+
+		searchInfoSection := slack.NewSectionBlock(nil, searchInfoFields, slack.NewAccessory(searchInfoBorrowBtn))
 		blocks = append(blocks, searchInfoSection, post.InfoBookSection(bookSummary), util.Divider())
 	}
 

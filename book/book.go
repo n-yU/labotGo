@@ -9,13 +9,15 @@ import (
 	"time"
 
 	"github.com/n-yU/labotGo/aid"
+	"github.com/n-yU/labotGo/data"
+	"github.com/n-yU/labotGo/es"
 	"github.com/n-yU/labotGo/post"
 	"github.com/n-yU/labotGo/util"
 	"github.com/slack-go/slack"
 )
 
 // コマンド応答ブロック 取得
-func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, ok bool) {
+func GetBlocks(cmdValues []string, cmdUserID string) (blocks []slack.Block, responseType string, ok bool) {
 	switch subType, subValues := cmdValues[0], cmdValues[1:]; subType {
 	case "register":
 		blocks, ok = getBlocksRegisterRequest(), true
@@ -24,7 +26,7 @@ func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, o
 	case "delete":
 		blocks, ok = getBlocksDeleteRequest(), true
 	case "search":
-		blocks, ok = getBlocksSearch(subValues), true
+		blocks, ok = getBlocksSearch(subValues, cmdUserID), true
 	default:
 		text := post.ErrText(fmt.Sprintf("コマンド %s team *%s* %s を使用することはできません", util.Cmd, subType, strings.Join(subValues, " ")))
 		blocks, ok = post.SingleTextBlock(text), false
@@ -53,6 +55,8 @@ func Action(actionID string, callback slack.InteractionCallback) (err error) {
 	case strings.HasPrefix(actionID, aid.DeleteBook+"_"):
 		ISBN := strings.Split(actionID, "_")[1]
 		blocks = DeleteBook(actionUserID, callback.BlockActionState.Values, ISBN)
+	case strings.HasPrefix(actionID, aid.BorrowBook):
+		blocks = BorrowBook(actionUserID, actionID)
 	}
 
 	if len(blocks) > 0 {
@@ -108,4 +112,23 @@ func requestOpenBD(ISBN string) (res *http.Response, err error) {
 
 	res, err = client.Do(request)
 	return res, err
+}
+
+// 書籍サマリ 取得
+func getBookSummary(ISBN string) (bookSummary data.BookSummary, blocks []slack.Block) {
+	body, err := es.GetDocument(data.BookSummary{ISBN: ISBN})
+
+	if err != nil {
+		text := post.ErrText(fmt.Sprintf("次のエラーにより書籍取得に失敗しました\n\n%v", err))
+		blocks = post.SingleTextBlock(text)
+
+		util.Logger.Printf("書籍サマリの取得に失敗しました（ISBN: %s）\n", ISBN)
+		util.Logger.Println(util.ReferErrorDetail)
+		util.Logger.Println(err)
+		return bookSummary, blocks
+	}
+
+	bookSummary = body.(data.BookSummary)
+	util.Logger.Printf("書籍情報: %s %s %s\n", bookSummary.Title, bookSummary.Publisher, bookSummary.Authors)
+	return bookSummary, blocks
 }
