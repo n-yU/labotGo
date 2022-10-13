@@ -28,7 +28,7 @@ func GetBlocks(cmdValues []string, cmdUserID string) (blocks []slack.Block, resp
 	case "search":
 		blocks, ok = getBlocksSearch(subValues, cmdUserID), true
 	default:
-		text := post.ErrText(fmt.Sprintf("コマンド %s team *%s* %s を使用することはできません", util.Cmd, subType, strings.Join(subValues, " ")))
+		text := post.ErrText(fmt.Sprintf("コマンド %s book *%s* %s を使用することはできません", util.Cmd, subType, strings.Join(subValues, " ")))
 		blocks, ok = post.SingleTextBlock(text), false
 	}
 	responseType = util.Ephemeral
@@ -57,6 +57,8 @@ func Action(actionID string, callback slack.InteractionCallback) (err error) {
 		blocks = DeleteBook(actionUserID, callback.BlockActionState.Values, ISBN)
 	case strings.HasPrefix(actionID, aid.BorrowBook):
 		blocks = BorrowBook(actionUserID, actionID)
+	case strings.HasPrefix(actionID, aid.ReturnBook):
+		blocks = ReturnBook(actionUserID, actionID)
 	}
 
 	if len(blocks) > 0 {

@@ -1,3 +1,4 @@
+// 機能: 書籍管理
 package book
 
 import (
@@ -31,6 +32,8 @@ func BorrowBook(actionUserID string, actionID string) (blocks []slack.Block) {
 		// 書籍貸し出し 応答
 		if err := bookSummary.ChangeOwner(actionUserID); err != nil {
 			text = post.ErrText(fmt.Sprintf("次のエラーにより，指定した書籍（ISBN: %s）の貸し出しに失敗しました\n\n%v", bookSummary.ISBN, err))
+		} else if bookSummary.GetOwner() == actionUserID {
+			text = post.ErrText(fmt.Sprintf("指定した書籍（ISBN: %s）は既に *あなた* が借りています", bookSummary.ISBN))
 		} else {
 			text = post.ScsText(fmt.Sprintf("書籍: *%s* - ISBN: %s が *あなた* に貸し出されました", bookSummary.Title, bookSummary.ISBN))
 		}
