@@ -15,13 +15,13 @@ import (
 func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, ok bool) {
 	switch subType, subValues := cmdValues[0], cmdValues[1:]; subType {
 	case "add":
-		blocks, ok = getBlockAdd(), true
+		blocks, ok = getBlocksAdd(), true
 	case "edit":
-		blocks, ok = getBlockEditMemberSelect(), true
+		blocks, ok = getBlocksEditMemberSelect(), true
 	case "delete":
-		blocks, ok = getBlockDeleteMemberSelect(), true
+		blocks, ok = getBlocksDeleteMemberSelect(), true
 	case "list":
-		blocks, ok = getBlockListMember(), true
+		blocks, ok = getBlocksListMember(), true
 	default:
 		text := post.ErrText(fmt.Sprintf(
 			"コマンド %s member *%s* %s を使用することはできません", util.Cmd, subType, strings.Join(subValues, " ")),

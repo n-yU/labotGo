@@ -12,18 +12,20 @@ import (
 
 // メンバー
 type MemberData struct {
-	TeamNames []string     `yaml:"teams"`
-	Image24   string       `yaml:"image_24"`
-	Image32   string       `yaml:"image_32"`
-	Image48   string       `yaml:"image_48"`
-	Created   *CreatedInfo `yaml:"created"`
+	TeamNames   []string     `yaml:"teams"`
+	RealName    string       `yaml:"real_name"`
+	DisplayName string       `yaml:"display_name"`
+	Image24     string       `yaml:"image_24"`
+	Image32     string       `yaml:"image_32"`
+	Image48     string       `yaml:"image_48"`
+	Created     *CreatedInfo `yaml:"created"`
 }
 
 // メンバーリスト
 type MembersData map[string]*MemberData
 
 // メンバーデータ 読み込み
-func LoadMember() (md MembersData, err error) {
+func ReadMember() (md MembersData, err error) {
 	f, err := os.Open(util.MemberDataPath())
 	if err != nil {
 		return md, err
@@ -42,8 +44,8 @@ func LoadMember() (md MembersData, err error) {
 	return md, err
 }
 
-// メンバーデータ 更新
-func (md MembersData) Reload() (err error) {
+// メンバーデータ 書き込み
+func (md MembersData) Write() (err error) {
 	bs, err := yaml.Marshal(&md)
 	if err != nil {
 		return err
@@ -73,7 +75,7 @@ func (md MembersData) GetAllEditedUserIDs() (userIDs []string) {
 
 // メンバーデータによるチームデータの同期
 func (md MembersData) SynchronizeTeam() error {
-	if oldTd, err := LoadTeam(); err != nil {
+	if oldTd, err := ReadTeam(); err != nil {
 		return err
 	} else {
 		// 所属メンバーを持たないチームが存在するため，更新前のチームデータから各チームデータを予めコピー
@@ -87,7 +89,7 @@ func (md MembersData) SynchronizeTeam() error {
 			}
 		}
 
-		err := newTd.Reload()
+		err := newTd.Write()
 		return err
 	}
 }
@@ -100,6 +102,7 @@ func NewMember(userID string, teamNames []string, created *CreatedInfo) (m *Memb
 	} else {
 		m = &MemberData{
 			TeamNames: teamNames, Image24: prof.Profile.Image24,
+			RealName: prof.Profile.RealName, DisplayName: prof.Profile.DisplayName,
 			Image32: prof.Profile.Image32, Image48: prof.Profile.Image48,
 			Created: NewCreatedInfo(created.UserID, created.At),
 		}

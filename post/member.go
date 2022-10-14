@@ -57,7 +57,7 @@ func InfoMemberSection(
 		infoTeamsTextList = append(infoTeamsTextList, teamNameText)
 	}
 	teamInfoObject := TxtBlockObj(util.Markdown, "*チーム*:")
-	teamNamesField = TxtBlockObj(util.Markdown, fmt.Sprintf("%s", strings.Join(infoTeamsTextList, ", ")))
+	teamNamesField = TxtBlockObj(util.Markdown, strings.Join(infoTeamsTextList, ", "))
 
 	elements := []slack.MixedElement{
 		userInfoObject, profImageObject, userIDObject, teamInfoObject, teamNamesField,
@@ -81,10 +81,10 @@ func InfoMemberSection(
 func ErrBlocksMembersData(err error, dataErrType string) []slack.Block {
 	var text string
 	switch dataErrType {
-	case util.DataLoadErr:
+	case util.DataReadErr:
 		text = "メンバーデータの読み込みに失敗しました"
-	case util.DataReloadErr:
-		text = "メンバーデータの更新に失敗しました"
+	case util.DataWriteErr:
+		text = "メンバーデータの書き込みに失敗しました"
 	default:
 		util.Logger.Fatalf("データエラータイプ %s は未定義です\n", dataErrType)
 	}

@@ -64,7 +64,6 @@ func InfoTeamSections(
 				userIDText = fmt.Sprintf("~<@%s>~", userID)
 			} else if isNew {
 				userIDText = fmt.Sprintf("*<@%s>*", userID)
-			} else {
 			}
 			elements = append(elements, slack.NewImageBlockElement(profImages[userID], userID))
 			elements = append(elements, TxtBlockObj(util.Markdown, userIDText))
@@ -104,10 +103,10 @@ func InputTeamNameSection(actionID string, initTeamName string) *slack.InputBloc
 func ErrBlocksTeamsData(err error, dataErrType string) []slack.Block {
 	var text string
 	switch dataErrType {
-	case util.DataLoadErr:
+	case util.DataReadErr:
 		text = "チームデータの読み込みに失敗しました"
-	case util.DataReloadErr:
-		text = "チームデータの更新に失敗しました"
+	case util.DataWriteErr:
+		text = "チームデータの書き込みに失敗しました"
 	default:
 		util.Logger.Fatalf("データエラータイプ %s は未定義です\n", dataErrType)
 	}

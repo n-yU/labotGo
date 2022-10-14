@@ -13,9 +13,9 @@ import (
 )
 
 // メンバー編集リクエスト（メンバー選択）
-func getBlockEditMemberSelect() (blocks []slack.Block) {
-	if md, err := data.LoadMember(); err != nil {
-		blocks = post.ErrBlocksMembersData(err, util.DataLoadErr)
+func getBlocksEditMemberSelect() (blocks []slack.Block) {
+	if md, err := data.ReadMember(); err != nil {
+		blocks = post.ErrBlocksMembersData(err, util.DataReadErr)
 	} else {
 		// ブロック: ヘッダ
 		headerText := post.InfoText("*編集したいメンバーを選択してください*")
@@ -43,11 +43,11 @@ func getBlockEditTeamsSelect(actionUserID string, blockActions map[string]map[st
 	)
 
 	// メンバー・チームデータ 読み込み
-	if md, err = data.LoadMember(); err != nil {
-		return post.ErrBlocksMembersData(err, util.DataLoadErr)
+	if md, err = data.ReadMember(); err != nil {
+		return post.ErrBlocksMembersData(err, util.DataReadErr)
 	}
-	if td, err = data.LoadTeam(); err != nil {
-		return post.ErrBlocksTeamsData(err, util.DataLoadErr)
+	if td, err = data.ReadTeam(); err != nil {
+		return post.ErrBlocksTeamsData(err, util.DataReadErr)
 	}
 
 	// ユーザID・変更前チームリスト 取得
@@ -85,8 +85,8 @@ func EditMember(actionUserID string, blockActions map[string]map[string]slack.Bl
 	util.Logger.Printf("メンバー編集リクエスト (from:%s): %+v\n", actionUserID, blockActions)
 
 	// メンバーデータ 読み込み
-	if md, err := data.LoadMember(); err != nil {
-		blocks = post.ErrBlocksMembersData(err, util.DataLoadErr)
+	if md, err := data.ReadMember(); err != nil {
+		blocks = post.ErrBlocksMembersData(err, util.DataReadErr)
 	} else {
 		var newTeamNames []string
 		// 所属チーム 取得
@@ -118,8 +118,8 @@ func EditMember(actionUserID string, blockActions map[string]map[string]slack.Bl
 			// メンバーデータ 更新
 			oldTeamNames := md.Update(userID, newTeamNames, actionUserID)
 
-			if err = md.Reload(); err != nil {
-				blocks = post.ErrBlocksMembersData(err, util.DataReloadErr)
+			if err = md.Write(); err != nil {
+				blocks = post.ErrBlocksMembersData(err, util.DataWriteErr)
 			} else {
 				if err := md.SynchronizeTeam(); err != nil {
 					blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))

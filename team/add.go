@@ -13,15 +13,15 @@ import (
 )
 
 // チーム追加リクエスト
-func getBlockAdd() (blocks []slack.Block) {
+func getBlocksAdd() (blocks []slack.Block) {
 	var (
 		md  data.MembersData
 		err error
 	)
 
 	// メンバーデータ 読み込み
-	if md, err = data.LoadMember(); err != nil {
-		blocks = post.ErrBlocksMembersData(err, util.DataLoadErr)
+	if md, err = data.ReadMember(); err != nil {
+		blocks = post.ErrBlocksMembersData(err, util.DataReadErr)
 		return blocks
 	}
 
@@ -62,11 +62,11 @@ func AddMember(actionUserID string, blockActions map[string]map[string]slack.Blo
 	util.Logger.Printf("チーム追加リクエスト (from %s): %+v\n", actionUserID, blockActions)
 
 	// チーム・メンバー データ 読み込み
-	if td, err = data.LoadTeam(); err != nil {
-		return post.ErrBlocksTeamsData(err, util.DataLoadErr)
+	if td, err = data.ReadTeam(); err != nil {
+		return post.ErrBlocksTeamsData(err, util.DataReadErr)
 	}
-	if md, err = data.LoadMember(); err != nil {
-		return post.ErrBlocksMembersData(err, util.DataLoadErr)
+	if md, err = data.ReadMember(); err != nil {
+		return post.ErrBlocksMembersData(err, util.DataReadErr)
 	}
 
 	// ユーザID・所属チーム 取得
@@ -106,8 +106,8 @@ func AddMember(actionUserID string, blockActions map[string]map[string]slack.Blo
 		// チームデータ更新
 		td.Add(teamName, teamUserIDs, actionUserID)
 
-		if err = td.Reload(); err != nil {
-			blocks = post.ErrBlocksTeamsData(err, util.DataReloadErr)
+		if err = td.Write(); err != nil {
+			blocks = post.ErrBlocksTeamsData(err, util.DataWriteErr)
 		} else {
 			if err := td.SynchronizeMember(); err != nil {
 				blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))

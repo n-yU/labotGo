@@ -23,7 +23,7 @@ type TeamData struct {
 type TeamsData map[string]*TeamData
 
 // チームデータ 読み込み
-func LoadTeam() (td TeamsData, err error) {
+func ReadTeam() (td TeamsData, err error) {
 	f, err := os.Open(util.TeamDataPath())
 	if err != nil {
 		return td, err
@@ -37,8 +37,8 @@ func LoadTeam() (td TeamsData, err error) {
 	return td, err
 }
 
-// チームデータ 更新
-func (td TeamsData) Reload() (err error) {
+// チームデータ 書き込み
+func (td TeamsData) Write() (err error) {
 	bs, err := yaml.Marshal(&td)
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func (td TeamsData) GetComplexTeamMemberUserIDs(teamNames []string) (uniqueMembe
 
 // チームデータによるメンバーデータの同期
 func (td TeamsData) SynchronizeMember() error {
-	if oldMd, err := LoadMember(); err != nil {
+	if oldMd, err := ReadMember(); err != nil {
 		return err
 	} else {
 		newMd := MembersData{}
@@ -99,7 +99,7 @@ func (td TeamsData) SynchronizeMember() error {
 			}
 		}
 
-		err = newMd.Reload()
+		err = newMd.Write()
 		return err
 	}
 }

@@ -2,7 +2,6 @@
 package post
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/n-yU/labotGo/util"
@@ -18,15 +17,15 @@ func PostMessage(data interface{}, blocks []slack.Block, responseType string) er
 	)
 
 	// メッセージ投稿 チャンネル/ユーザID 取得
-	switch data.(type) {
+	switch data := data.(type) {
 	case slack.SlashCommand:
-		cmd := data.(slack.SlashCommand)
+		cmd := data
 		channelId, userId = cmd.ChannelID, cmd.UserID
 	case slack.InteractionCallback:
-		callback := data.(slack.InteractionCallback)
+		callback := data
 		channelId, userId = callback.Channel.Conversation.ID, callback.User.ID
 	default:
-		err = errors.New(fmt.Sprintf("%T 型のデータはメッセージ投稿に対応していません\n", data))
+		err = fmt.Errorf("%T 型のデータはメッセージ投稿に対応していません", data)
 		return err
 	}
 
@@ -37,7 +36,7 @@ func PostMessage(data interface{}, blocks []slack.Block, responseType string) er
 	case util.Ephemeral:
 		_, err = util.SocketModeClient.PostEphemeral(channelId, userId, slack.MsgOptionBlocks(blocks...))
 	default:
-		err = errors.New(fmt.Sprintf("レスポンスタイプ %s は存在しません\n", responseType))
+		err = fmt.Errorf("レスポンスタイプ %s は存在しません", responseType)
 	}
 
 	return err

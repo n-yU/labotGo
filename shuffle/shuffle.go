@@ -39,8 +39,8 @@ func getBlocksShuffle(teamNamesString string) ([]slack.Block, string) {
 	util.Logger.Println("メンバーシャッフルリクエスト")
 
 	// メンバーデータ 読み込み
-	if md, err = data.LoadMember(); err != nil {
-		blocks := post.ErrBlocksMembersData(err, util.DataLoadErr)
+	if md, err = data.ReadMember(); err != nil {
+		blocks := post.ErrBlocksMembersData(err, util.DataReadErr)
 		return blocks, util.Ephemeral
 	}
 
@@ -79,8 +79,8 @@ func getBlocksShuffle(teamNamesString string) ([]slack.Block, string) {
 func getTeamsMembers(teamNamesString string) (memberUserIDs map[string][]string, blocks []slack.Block) {
 	memberUserIDs = map[string][]string{}
 	// チームデータ 読み込み
-	if td, err := data.LoadTeam(); err != nil {
-		blocks = post.ErrBlocksTeamsData(err, util.DataLoadErr)
+	if td, err := data.ReadTeam(); err != nil {
+		blocks = post.ErrBlocksTeamsData(err, util.DataReadErr)
 	} else {
 		// バリデーションチェック
 		isContainComma, isContainPlus := strings.Contains(teamNamesString, ","), strings.Contains(teamNamesString, "+")

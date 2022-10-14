@@ -15,13 +15,13 @@ import (
 func GetBlocks(cmdValues []string) (blocks []slack.Block, responseType string, ok bool) {
 	switch subType, subValues := cmdValues[0], cmdValues[1:]; subType {
 	case "add":
-		blocks, ok = getBlockAdd(), true
+		blocks, ok = getBlocksAdd(), true
 	case "edit":
-		blocks, ok = getBlockEditTeamSelect(), true
+		blocks, ok = getBlocksEditTeamSelect(), true
 	case "delete":
-		blocks, ok = getBlockDeleteTeamSelect(), true
+		blocks, ok = getBlocksDeleteTeamSelect(), true
 	case "list":
-		blocks, ok = getBlockListTeam(subValues), true
+		blocks, ok = getBlocksListTeam(subValues), true
 	default:
 		text := post.ErrText(fmt.Sprintf("コマンド %s team *%s* %s を使用することはできません", util.Cmd, subType, strings.Join(subValues, " ")))
 		blocks, ok = post.SingleTextBlock(text), false
@@ -42,7 +42,7 @@ func Action(actionID string, callback slack.InteractionCallback) (err error) {
 	case actionID == aid.AddTeam:
 		blocks = AddMember(actionUserID, callback.BlockActionState.Values)
 	case actionID == aid.EditTeamSelectName:
-		blocks = getBlockEditTeamInfo(actionUserID, callback.BlockActionState.Values)
+		blocks = getBlocksEditTeamInfo(actionUserID, callback.BlockActionState.Values)
 	case strings.HasPrefix(actionID, aid.EditTeam+"_"):
 		teamName := strings.Split(actionID, "_")[1]
 		blocks = EditTeam(actionUserID, callback.BlockActionState.Values, teamName)

@@ -286,7 +286,7 @@ func checkFirstRun() (isFirstRun bool, err error) {
 
 	// 一方のデータファイルしか存在しない場合，もう一方のデータファイルを復元
 	if isMemberData {
-		if md, err := data.LoadMember(); err != nil {
+		if md, err := data.ReadMember(); err != nil {
 			return isFirstRun, err
 		} else {
 			util.Logger.Println("チームデータファイルが存在しないため，メンバーデータから復元します")
@@ -294,7 +294,7 @@ func checkFirstRun() (isFirstRun bool, err error) {
 		}
 	}
 	if isTeamData {
-		if td, err := data.LoadTeam(); err != nil {
+		if td, err := data.ReadTeam(); err != nil {
 			return isFirstRun, err
 		} else {
 			util.Logger.Println("メンバーデータファイルが存在しないため，チームデータから復元します")
@@ -315,14 +315,14 @@ func checkFirstRun() (isFirstRun bool, err error) {
 	// メンバーデータ 初期設定
 	md := data.MembersData{}
 	md.Add(util.MasterUserID, []string{util.MasterTeamName}, util.MasterUserID)
-	if err := md.Reload(); err != nil {
+	if err := md.Write(); err != nil {
 		util.Logger.Fatal(err)
 	}
 
 	// チームデータ 初期設定
 	td := data.TeamsData{}
 	td.Add(util.MasterTeamName, []string{util.MasterUserID}, util.MasterUserID)
-	if err := td.Reload(); err != nil {
+	if err := td.Write(); err != nil {
 		util.Logger.Fatal(err)
 	}
 

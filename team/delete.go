@@ -13,10 +13,10 @@ import (
 )
 
 // チーム削除リクエスト（チーム選択）
-func getBlockDeleteTeamSelect() (blocks []slack.Block) {
+func getBlocksDeleteTeamSelect() (blocks []slack.Block) {
 	// チームデータ 読み込み
-	if td, err := data.LoadTeam(); err != nil {
-		blocks = post.ErrBlocksTeamsData(err, util.DataLoadErr)
+	if td, err := data.ReadTeam(); err != nil {
+		blocks = post.ErrBlocksTeamsData(err, util.DataReadErr)
 	} else {
 		// ブロック: ヘッダ
 		headerText := post.InfoText("*削除したいチームを選択してください*")
@@ -42,11 +42,11 @@ func DeleteTeamConfirm(actionUserID string, blockActions map[string]map[string]s
 	util.Logger.Printf("チーム削除リクエスト (from %s):%+v", actionUserID, blockActions)
 
 	// チーム・メンバーデータ 読み込み
-	if td, err = data.LoadTeam(); err != nil {
-		return post.ErrBlocksTeamsData(err, util.DataLoadErr)
+	if td, err = data.ReadTeam(); err != nil {
+		return post.ErrBlocksTeamsData(err, util.DataReadErr)
 	}
-	if md, err = data.LoadMember(); err != nil {
-		return post.ErrBlocksMembersData(err, util.DataLoadErr)
+	if md, err = data.ReadMember(); err != nil {
+		return post.ErrBlocksMembersData(err, util.DataReadErr)
 	}
 
 	var teamName string
@@ -82,14 +82,14 @@ func DeleteTeam(actionUserID string, blockActions map[string]map[string]slack.Bl
 	var ok bool
 
 	// チームデータ 読み込み
-	if td, err := data.LoadTeam(); err != nil {
-		blocks = post.ErrBlocksTeamsData(err, util.DataLoadErr)
+	if td, err := data.ReadTeam(); err != nil {
+		blocks = post.ErrBlocksTeamsData(err, util.DataReadErr)
 	} else {
 		// チーム削除
 		td.Delete(teamName)
 
-		if err = td.Reload(); err != nil {
-			blocks = post.ErrBlocksTeamsData(err, util.DataReloadErr)
+		if err = td.Write(); err != nil {
+			blocks = post.ErrBlocksTeamsData(err, util.DataWriteErr)
 		} else {
 			if err := td.SynchronizeMember(); err != nil {
 				blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))

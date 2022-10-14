@@ -16,8 +16,8 @@ import (
 // グルーピングリクエスト: カスタムメンバーモード
 func getBlocksCustom() []slack.Block {
 	// メンバーデータ 読み込み
-	if md, err := data.LoadMember(); err != nil {
-		return post.ErrBlocksTeamsData(err, util.DataLoadErr)
+	if md, err := data.ReadMember(); err != nil {
+		return post.ErrBlocksTeamsData(err, util.DataReadErr)
 	} else {
 		// ブロック: ヘッダ
 		headerText := post.InfoText("指定したメンバーをグルーピングします\n\n")
@@ -63,8 +63,8 @@ func GroupCustom(
 	util.Logger.Printf("チームメンバーグルーピングリクエスト (from %s): %+v\n", actionUserID, blockActions)
 
 	// メンバー・データ 読み込み
-	if md, err = data.LoadMember(); err != nil {
-		blocks = post.ErrBlocksMembersData(err, util.DataLoadErr)
+	if md, err = data.ReadMember(); err != nil {
+		blocks = post.ErrBlocksMembersData(err, util.DataReadErr)
 		return blocks, util.Ephemeral
 	}
 

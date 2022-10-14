@@ -12,7 +12,7 @@ import (
 )
 
 // チームリスト表示
-func getBlockListTeam(values []string) (blocks []slack.Block) {
+func getBlocksListTeam(values []string) (blocks []slack.Block) {
 	var (
 		td        data.TeamsData
 		md        data.MembersData
@@ -23,11 +23,11 @@ func getBlockListTeam(values []string) (blocks []slack.Block) {
 	util.Logger.Println("チームリスト表示リクエスト")
 
 	// チーム・メンバー データ 読み込み
-	if td, err = data.LoadTeam(); err != nil {
-		return post.ErrBlocksTeamsData(err, util.DataLoadErr)
+	if td, err = data.ReadTeam(); err != nil {
+		return post.ErrBlocksTeamsData(err, util.DataReadErr)
 	}
-	if md, err = data.LoadMember(); err != nil {
-		return post.ErrBlocksMembersData(err, util.DataLoadErr)
+	if md, err = data.ReadMember(); err != nil {
+		return post.ErrBlocksMembersData(err, util.DataReadErr)
 	}
 
 	if len(values) > 1 {

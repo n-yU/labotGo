@@ -32,8 +32,8 @@ const (
 	ErrorSynchronizeData = "メンバーデータとチームデータの同期に失敗しました"
 	ReferErrorDetail     = "詳しくは次のエラーを確認してください"
 
-	DataLoadErr   = "dataLoadError"
-	DataReloadErr = "dataReloadError"
+	DataReadErr  = "dataReadError"
+	DataWriteErr = "dataWriteError"
 
 	GroupTypeOptionNum  = "グループ数"
 	GroupTypeOptionSize = "グループサイズ"
@@ -43,6 +43,8 @@ const (
 	EsURL       = "http://elasticsearch:9200"
 	EsBookIndex = "book"
 	EsBookType  = "doc"
+
+	MaxBlocks = 50
 )
 
 var (

@@ -12,7 +12,7 @@ import (
 )
 
 // メンバー追加リクエスト
-func getBlockAdd() []slack.Block {
+func getBlocksAdd() []slack.Block {
 	var (
 		md  data.MembersData
 		td  data.TeamsData
@@ -20,11 +20,11 @@ func getBlockAdd() []slack.Block {
 	)
 
 	// メンバー・チームデータ 読み込み
-	if md, err = data.LoadMember(); err != nil {
-		return post.ErrBlocksMembersData(err, util.DataLoadErr)
+	if md, err = data.ReadMember(); err != nil {
+		return post.ErrBlocksMembersData(err, util.DataReadErr)
 	}
-	if td, err = data.LoadTeam(); err != nil {
-		return post.ErrBlocksTeamsData(err, util.DataLoadErr)
+	if td, err = data.ReadTeam(); err != nil {
+		return post.ErrBlocksTeamsData(err, util.DataReadErr)
 	}
 
 	// ブロック: ヘッダ
@@ -60,8 +60,8 @@ func AddMember(actionUserID string, blockActions map[string]map[string]slack.Blo
 	util.Logger.Printf("メンバー追加リクエスト (from:%s): %+v\n", actionUserID, blockActions)
 
 	// メンバーデータ 読み込み
-	if md, err := data.LoadMember(); err != nil {
-		blocks = post.ErrBlocksMembersData(err, util.DataLoadErr)
+	if md, err := data.ReadMember(); err != nil {
+		blocks = post.ErrBlocksMembersData(err, util.DataReadErr)
 	} else {
 		var (
 			userID    string
@@ -102,8 +102,8 @@ func AddMember(actionUserID string, blockActions map[string]map[string]slack.Blo
 			// メンバーデータ 更新
 			md.Add(userID, teamNames, actionUserID)
 
-			if err = md.Reload(); err != nil {
-				blocks = post.ErrBlocksMembersData(err, util.DataReloadErr)
+			if err = md.Write(); err != nil {
+				blocks = post.ErrBlocksMembersData(err, util.DataWriteErr)
 			} else {
 				if err := md.SynchronizeTeam(); err != nil {
 					blocks = post.SingleTextBlock(post.ErrText(util.ErrorSynchronizeData))
