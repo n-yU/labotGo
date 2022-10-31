@@ -114,7 +114,7 @@ func DeleteBook(actionUserID string, blockActions map[string]map[string]slack.Bl
 	headerTipsSection := post.TipsSection(headerTipsText)
 	blocks = []slack.Block{headerSection, headerTipsSection}
 
-	util.Logger.Println(fmt.Sprintf("書籍（ISBN: %s）の削除に成功しました\n", bookSummary.ISBN))
+	util.Logger.Printf("書籍（ISBN: %s）の削除に成功しました\n", bookSummary.ISBN)
 	delete(data.BookBuffer[actionUserID], ISBN)
 	return blocks
 }

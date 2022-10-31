@@ -24,7 +24,9 @@ func ReturnBook(actionUserID string, actionID string) (blocks []slack.Block) {
 	}
 
 	// 書籍返却 応答
-	if err := bookSummary.ChangeOwner(util.DefaultBookOwner()); err != nil {
+	if bookSummary.GetOwner() != actionUserID {
+		text = post.ErrText(fmt.Sprintf("指定した書籍（ISBN: %s）は既に返却済みです", bookSummary.ISBN))
+	} else if err := bookSummary.ChangeOwner(util.DefaultBookOwner()); err != nil {
 		text = post.ErrText(fmt.Sprintf("次のエラーにより，指定した書籍（ISBN: %s）の返却に失敗しました\n\n%v", bookSummary.ISBN, err))
 	} else {
 		text = post.ScsText(fmt.Sprintf("書籍: *%s* - ISBN: %s が *%s* に返却されました",

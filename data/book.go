@@ -67,7 +67,7 @@ func (b *Book) SetContent() {
 	)
 }
 
-// DB: 書籍テーブル追加
+// DB: 書籍テーブル 追加
 func (b *BookSummary) AddDB() error {
 	stmt, err := util.DB.Prepare("insert into books (ISBN, title, owner) values (?, ?, ?)")
 	if err != nil {
@@ -79,7 +79,7 @@ func (b *BookSummary) AddDB() error {
 	return err
 }
 
-// DB: 書籍オーナー取得
+// DB: 書籍オーナー 取得
 func (b *BookSummary) GetOwner() (owner string) {
 	stmt, _ := util.DB.Prepare("select owner from books where ISBN = ?")
 	defer stmt.Close()
@@ -88,11 +88,27 @@ func (b *BookSummary) GetOwner() (owner string) {
 	return owner
 }
 
-// DB: 書籍オーナー変更
+// DB: 書籍オーナー 変更
 func (b *BookSummary) ChangeOwner(newOwner string) (err error) {
 	stmt, _ := util.DB.Prepare("update books set owner = ? where ISBN = ?")
 	defer stmt.Close()
 
 	_, err = stmt.Exec(newOwner, b.ISBN)
 	return err
+}
+
+// DB: オーナー書籍 取得
+func GetOwnerBooks(owner string) (ISBNs []string) {
+	stmt, _ := util.DB.Prepare("select ISBN from books where owner = ?")
+	defer stmt.Close()
+
+	rows, _ := stmt.Query(owner)
+	defer rows.Close()
+
+	for rows.Next() {
+		var isbn string
+		rows.Scan(&isbn)
+		ISBNs = append(ISBNs, isbn)
+	}
+	return ISBNs
 }

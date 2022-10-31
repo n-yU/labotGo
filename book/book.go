@@ -28,7 +28,7 @@ func GetBlocks(cmdValues []string, cmdUserID string) (blocks []slack.Block, resp
 	case "search":
 		blocks, ok = getBlocksSearch(subValues, cmdUserID), true
 	case "list":
-		blocks, ok = getBlocksList(), true
+		blocks, ok = getBlocksList(cmdUserID), true
 	default:
 		text := post.ErrText(fmt.Sprintf("コマンド %s book *%s* %s を使用することはできません", util.Cmd, subType, strings.Join(subValues, " ")))
 		blocks, ok = post.SingleTextBlock(text), false

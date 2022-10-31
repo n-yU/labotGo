@@ -30,10 +30,10 @@ func BorrowBook(actionUserID string, actionID string) (blocks []slack.Block) {
 		text = post.ErrText(fmt.Sprintf("指定した書籍（ISBN: %s）は <@%s> に貸出中のため借りられません", bookSummary.ISBN, bookOwner))
 	} else {
 		// 書籍貸し出し 応答
-		if err := bookSummary.ChangeOwner(actionUserID); err != nil {
-			text = post.ErrText(fmt.Sprintf("次のエラーにより，指定した書籍（ISBN: %s）の貸し出しに失敗しました\n\n%v", bookSummary.ISBN, err))
-		} else if bookSummary.GetOwner() == actionUserID {
+		if bookSummary.GetOwner() == actionUserID {
 			text = post.ErrText(fmt.Sprintf("指定した書籍（ISBN: %s）は既に *あなた* が借りています", bookSummary.ISBN))
+		} else if err := bookSummary.ChangeOwner(actionUserID); err != nil {
+			text = post.ErrText(fmt.Sprintf("次のエラーにより，指定した書籍（ISBN: %s）の貸し出しに失敗しました\n\n%v", bookSummary.ISBN, err))
 		} else {
 			text = post.ScsText(fmt.Sprintf("書籍: *%s* - ISBN: %s が *あなた* に貸し出されました", bookSummary.Title, bookSummary.ISBN))
 		}

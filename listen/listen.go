@@ -49,7 +49,7 @@ func Command(cmd slack.SlashCommand) error {
 	case "hello":
 		if isEmptyValues {
 			text := "*Hello, World!*"
-			blocks, responseType, ok = post.SingleTextBlock(text), util.InChannel, true
+			blocks, responseType, ok = post.SingleTextBlock(text), util.Ephemeral, true
 		} else {
 			text := post.ErrText(fmt.Sprintf("%s *%s* に引数を与えることはできません", util.Cmd, cmdType))
 			blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
