@@ -17,8 +17,6 @@ import (
 
 const (
 	Version        = "1.0.0-alpha"
-	DebugMode      = false
-	DeveloperMode  = true // botもメンバー追加を許可（デバッグ用）
 	Cmd            = "/lab"
 	MasterTeamName = "all"
 
@@ -48,6 +46,7 @@ const (
 )
 
 var (
+	Debug            = false
 	Logger           *log.Logger
 	Api              *slack.Client
 	SocketModeClient *socketmode.Client

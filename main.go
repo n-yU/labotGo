@@ -28,8 +28,10 @@ import (
 // labotGo
 func main() {
 	// コマンドラインオプション 処理
-	var isResetCode bool
+	var isResetCode, isSuperDebug bool
 	flag.BoolVar(&isResetCode, "rc", false, "リセットコード設定")
+	flag.BoolVar(&util.Debug, "d", false, "デバッグモード")
+	flag.BoolVar(&isSuperDebug, "sd", false, "スーパーデバッグモード")
 	flag.Parse()
 
 	// ロガー 設定
@@ -61,6 +63,10 @@ func main() {
 		return
 	}
 
+	if util.Debug {
+		util.Logger.Println("デバッグモードで起動しました")
+	}
+
 	// トークン 確認
 	appToken := os.Getenv("APP_TOKEN")
 	if appToken == "" {
@@ -79,8 +85,8 @@ func main() {
 	}
 
 	// クライアント 生成
-	util.Api = slack.New(botToken, slack.OptionDebug(util.DebugMode), slack.OptionLog(util.Logger), slack.OptionAppLevelToken(appToken))
-	util.SocketModeClient = socketmode.New(util.Api, socketmode.OptionDebug(util.DebugMode), socketmode.OptionLog(util.Logger))
+	util.Api = slack.New(botToken, slack.OptionDebug(isSuperDebug), slack.OptionLog(util.Logger), slack.OptionAppLevelToken(appToken))
+	util.SocketModeClient = socketmode.New(util.Api, socketmode.OptionDebug(isSuperDebug), socketmode.OptionLog(util.Logger))
 
 	go func() {
 		for evt := range util.SocketModeClient.Events {
@@ -101,7 +107,7 @@ func main() {
 					util.Logger.Printf("Ignored %+v \n", evt)
 					continue
 				}
-				if util.DebugMode {
+				if isSuperDebug {
 					util.Logger.Printf("Event を受け取りました: %+v\n", eventsAPIEvent)
 				}
 				util.SocketModeClient.Ack(*evt.Request)
@@ -117,14 +123,14 @@ func main() {
 					util.Logger.Printf("Ignored %+v\n", evt)
 					continue
 				}
-				if util.DebugMode {
+				if isSuperDebug {
 					util.Logger.Println("Interaction を受け取りました")
 				}
 				util.SocketModeClient.Ack(*evt.Request)
 
 				switch callback.Type {
 				case slack.InteractionTypeBlockActions:
-					if util.DebugMode {
+					if isSuperDebug {
 						util.Logger.Printf("Block Action を受け取りました: %+v\n", callback.BlockActionState)
 					}
 				default:
@@ -156,7 +162,7 @@ func main() {
 	}()
 
 	// 全ユーザIDリスト 取得
-	util.AllUserIDs = data.GetAllUserIDs(util.DeveloperMode)
+	util.AllUserIDs = data.GetAllUserIDs(util.Debug)
 
 	// マスタユーザID（labotGo ID）取得
 	response, err := util.SocketModeClient.AuthTest()
