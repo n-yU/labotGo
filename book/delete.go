@@ -23,7 +23,7 @@ func getBlocksDeleteRequest() (blocks []slack.Block) {
 	headerTipsSection := post.TipsIBSNSection()
 
 	// ブロック: ISBNコード 入力
-	ISBNInputSection := post.InputISBNSection(aid.DeleteBookInputISBN)
+	ISBNInputSection := post.InputISBNSection(aid.DeleteBookInputISBN, false)
 
 	// ブロック: 確認ボタン
 	actionBtnBlock := post.CustomBtnSection("OK", "確認", aid.DeleteBookRequest)

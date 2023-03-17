@@ -29,12 +29,22 @@ func TipsSearchSection() *slack.ContextBlock {
 }
 
 // 定型セクション: ISBNコード入力
-func InputISBNSection(actionID string) *slack.InputBlock {
-	inputSectionText := TxtBlockObj(util.PlainText, "ISBNコード")
-	inputSectionHint := TxtBlockObj(util.PlainText, "13桁もしくは接頭記号の 978 に続く10桁のみ入力してください")
+func InputISBNSection(actionID string, isMulti bool) *slack.InputBlock {
+	var inputSectionText *slack.TextBlockObject
+	if isMulti {
+		inputSectionText = TxtBlockObj(util.PlainText, "ISBNコード（改行区切り・空行無視）")
+	} else {
+		inputSectionText = TxtBlockObj(util.PlainText, "ISBNコード")
+	}
+
+	inputSectionHint := TxtBlockObj(util.PlainText, "10桁 or 13桁（先頭978）の 数字,X を入力してください")
 	inputText := TxtBlockObj(util.PlainText, "ISBNコードを入力")
+
 	input := slack.NewPlainTextInputBlockElement(inputText, actionID)
-	input.MinLength, input.MaxLength = 10, 13
+	input.Multiline = isMulti
+	if !isMulti {
+		input.MinLength, input.MaxLength = 10, 13
+	}
 	inputSection := slack.NewInputBlock("", inputSectionText, inputSectionHint, input)
 	return inputSection
 }

@@ -25,7 +25,7 @@ func getBlocksRegisterRequest() (blocks []slack.Block) {
 	headerTipsSection := post.TipsIBSNSection()
 
 	// ブロック: ISBNコード 入力
-	ISBNInputSection := post.InputISBNSection(aid.RegisterBookInputISBN)
+	ISBNInputSection := post.InputISBNSection(aid.RegisterBookInputISBN, false)
 
 	// ブロック: 確認ボタン
 	actionBtnBlock := post.CustomBtnSection("OK", "確認", aid.RegisterBookRequest)
@@ -138,6 +138,7 @@ func RegisterBook(actionUserID string, blockActions map[string]map[string]slack.
 	// ブロック: ヘッダ Tips
 	headerTipsText := []string{
 		"上記フォームは ISBNコード の入力欄を書き換えることで再利用できます",
+		fmt.Sprintf("複数の書籍をまとめて登録したい場合は `%s book register-bulk` が便利です", util.Cmd),
 		fmt.Sprintf("現在 *%d* 冊の書籍が *labotGo* に登録されています", es.CountDoc(util.EsBookIndex)),
 	}
 	headerTipsSection := post.TipsSection(headerTipsText)

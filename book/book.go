@@ -21,6 +21,8 @@ func GetBlocks(cmdValues []string, cmdUserID string) (blocks []slack.Block, resp
 	switch subType, subValues := cmdValues[0], cmdValues[1:]; subType {
 	case "register":
 		blocks, ok = getBlocksRegisterRequest(), true
+	case "register-bulk":
+		blocks, ok = getBlocksRegisterBulkRequest(), true
 	case "reset":
 		blocks, ok = getBlocksResetRequest(), true
 	case "delete":
@@ -50,6 +52,8 @@ func Action(actionID string, callback slack.InteractionCallback) (err error) {
 	case strings.HasPrefix(actionID, aid.RegisterBook+"_"):
 		ISBN := strings.Split(actionID, "_")[1]
 		blocks = RegisterBook(actionUserID, callback.BlockActionState.Values, ISBN)
+	case actionID == aid.RegisterBulkBook:
+		blocks = RegisterBulkBook(actionUserID, callback.BlockActionState.Values)
 	case actionID == aid.ResetBook:
 		blocks = ResetBook(actionUserID, callback.BlockActionState.Values)
 	case actionID == aid.DeleteBookRequest:
@@ -82,6 +86,27 @@ func getISBN(actionID string, blockActions map[string]map[string]slack.BlockActi
 	return ISBNString
 }
 
+// 複数ISBNコード 取得
+func getMultiISBN(actionID string, blockActions map[string]map[string]slack.BlockAction) (ISBNStringList []string) {
+	var ISBNStringValues string
+	for _, action := range blockActions {
+		for aID, values := range action {
+			switch aID {
+			case actionID:
+				ISBNStringValues = values.Value
+			}
+		}
+	}
+
+	for _, ISBNString := range strings.Split(ISBNStringValues, "\n") {
+		// 空行無視
+		if len(ISBNString) > 0 {
+			ISBNStringList = append(ISBNStringList, ISBNString)
+		}
+	}
+	return ISBNStringList
+}
+
 // ISBNコード バリデーションチェック
 func validateISBN(ISBN string) (string, []slack.Block) {
 	var blocks []slack.Block
@@ -90,7 +115,7 @@ func validateISBN(ISBN string) (string, []slack.Block) {
 	} else if len(ISBN) != 10 && len(ISBN) != 13 {
 		blocks = post.SingleTextBlock(post.ErrText("ISBNコード は10桁もしくは13桁で指定する必要があります"))
 	} else if len(ISBN) == 13 && !strings.HasPrefix(ISBN, "978") {
-		blocks = post.SingleTextBlock(post.ErrText("13桁の ISBNコード の接頭記号は必ず `978` です（もしくはこれを省略できます）"))
+		blocks = post.SingleTextBlock(post.ErrText("13桁の ISBNコード の接頭記号は必ず `978` です"))
 	}
 
 	if len(ISBN) == 10 {

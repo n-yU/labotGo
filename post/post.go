@@ -43,10 +43,14 @@ func PostMessage(data interface{}, blocks []slack.Block, responseType string) er
 }
 
 // 動作チェック用 メッセージ投稿
-func Start(defaultCh string) error {
+func Start(defaultCh string) (err error) {
+	if util.Debug {
+		return err
+	}
+
 	text := InfoText(fmt.Sprintf("*<https://github.com/n-yU/labotGo|labotGo> v%s を起動しました*\n", util.Version))
 	message := slack.MsgOptionText(text, false)
 
-	_, _, err := util.SocketModeClient.PostMessage(defaultCh, message)
+	_, _, err = util.SocketModeClient.PostMessage(defaultCh, message)
 	return err
 }

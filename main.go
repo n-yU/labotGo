@@ -176,6 +176,7 @@ func main() {
 
 	// Elasticsearch: クライアント生成
 	if util.EsClient, err = elastic.NewClient(elastic.SetURL(util.EsURL), elastic.SetSniff(false)); err != nil {
+		util.Logger.Println("Elasticsearch クライアント生成時に以下のエラーが発生しました")
 		util.Logger.Fatal(err)
 	}
 	// Elasticsearch: バージョン取得
@@ -183,7 +184,7 @@ func main() {
 		panic(err)
 	}
 	util.Logger.Printf("Elasticsearch バージョン %s\n", util.EsVersion)
-	util.Logger.Println("Elasticsearch - http://127.0.0.1:9200/")
+	util.Logger.Println("Elasticsearch - http://elasticsearch:9200/")
 
 	// 初回起動チェック（データファイル生成）
 	if isFirstRun, err := checkFirstRun(); isFirstRun {
@@ -230,7 +231,7 @@ func main() {
 	defaultCh := fmt.Sprintf("#%s", os.Getenv("DEFAULT_CHANNEL"))
 	if err := post.Start(defaultCh); err != nil {
 		util.Logger.Println("labotGo の起動に失敗しました")
-		util.Logger.Printf("Tips: labotGo は起動時に動作チェックのため，デフォルトチャンネル %s にも追加する必要があります\n", defaultCh)
+		util.Logger.Printf("Tips: labotGo は起動時に動作チェックのため，デフォルトチャンネル %s に追加する必要があります\n", defaultCh)
 		util.Logger.Println("Tips: デフォルトチャンネルは .env から変更することもできます")
 		util.Logger.Fatal(err)
 	}
