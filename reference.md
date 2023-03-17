@@ -25,6 +25,7 @@
 - [go bcryptのコードを読む - Qiita](https://qiita.com/butterv/items/ca330d27fe51a6bf7a3d)
 - [Goでのエラー判別 - Qiita](https://qiita.com/minoritea/items/94feb33b61c5fdcc6105)
 - [Why no max/min function for integer in GoLang | Pixelstech.net](https://www.pixelstech.net/article/1559993656-Why-no-max-min-function-for-integer-in-GoLang)
+- [Goのruneを理解するためのUnicode知識 - Qiita](https://qiita.com/seihmd/items/4a878e7fa340d7963fee)
 
 ## slack-go
 - [slack-go/slack: Slack API in Go - community-maintained fork created by the original author, @nlopes](https://github.com/slack-go/slack)
@@ -56,6 +57,7 @@
 - [Go の net/http を使って Web API にリクエストを行う：CData API Server - CData Software Blog](https://www.cdata.com/jp/blog/entry/golanghttpapi)
 - [openBDのAPIライブラリをGoでつくりました - Qiita](https://qiita.com/seihmd/items/d1f8b3b54cbc93346d78)
 - [seihmd/openbd: openBD API written by Go](https://github.com/seihmd/openbd)
+- [ISBN-10とISBN-13の相互変換 - Mae向きなブログ](https://maehrm.hatenablog.com/entry/20141225/p1)
 
 ## Elasticsearch
 - [はじめての Elasticsearch - Qiita](https://qiita.com/nskydiving/items/1c2dc4e0b9c98d164329)

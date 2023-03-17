@@ -107,20 +107,50 @@ func getMultiISBN(actionID string, blockActions map[string]map[string]slack.Bloc
 	return ISBNStringList
 }
 
+// ISBN10 -> ISBN13 変換
+func convertISBN10to13(ISBN10 string) string {
+	ISBN13, checkDigit := "978"+ISBN10[:9], 0
+
+	for i, r := range ISBN13 {
+		d := int(r - '0')
+		if i%2 > 0 {
+			d *= 3
+		}
+		checkDigit += d
+	}
+
+	checkDigit = (10 - checkDigit%10) % 10
+	ISBN13 += strconv.Itoa(checkDigit)
+	util.Logger.Printf("ISBN10: %s -> ISBN13: %s\n", ISBN10, ISBN13)
+	return ISBN13
+}
+
 // ISBNコード バリデーションチェック
 func validateISBN(ISBN string) (string, []slack.Block) {
 	var blocks []slack.Block
-	if _, err := strconv.Atoi(ISBN); err != nil {
-		blocks = post.SingleTextBlock(post.ErrText("指定した ISBNコード に数字以外が含まれています"))
-	} else if len(ISBN) != 10 && len(ISBN) != 13 {
-		blocks = post.SingleTextBlock(post.ErrText("ISBNコード は10桁もしくは13桁で指定する必要があります"))
-	} else if len(ISBN) == 13 && !strings.HasPrefix(ISBN, "978") {
-		blocks = post.SingleTextBlock(post.ErrText("13桁の ISBNコード の接頭記号は必ず `978` です"))
+	codeLen := len(ISBN)
+
+	if codeLen == 10 {
+		// ISBN10
+		if _, err := strconv.Atoi(ISBN[:9]); err != nil {
+			blocks = post.SingleTextBlock(post.ErrText("指定した ISBNコード に数字以外が含まれています（10桁の場合は末尾 `X` も可）"))
+		} else if _, err := strconv.Atoi(ISBN[9:10]); (err != nil) && (ISBN[9:10] != "X") {
+			blocks = post.SingleTextBlock(post.ErrText("10桁の ISBNコード の末尾は必ず数字か `X` です"))
+		} else {
+			// ISBN10 -> ISBN13
+			ISBN = convertISBN10to13(ISBN)
+		}
+	} else if codeLen == 13 {
+		// ISBN13
+		if !strings.HasPrefix(ISBN, "978") {
+			blocks = post.SingleTextBlock(post.ErrText("13桁の ISBNコード の先頭3桁は必ず `978` です"))
+		} else if _, err := strconv.Atoi(ISBN); err != nil {
+			blocks = post.SingleTextBlock(post.ErrText("指定した ISBNコード に数字以外が含まれています"))
+		}
+	} else {
+		blocks = post.SingleTextBlock(post.ErrText("ISBNコード は 10桁 or 13桁 で指定する必要があります"))
 	}
 
-	if len(ISBN) == 10 {
-		ISBN = "978" + ISBN
-	}
 	return ISBN, blocks
 }
 

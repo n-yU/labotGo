@@ -47,7 +47,7 @@ func RegisterBulkBook(actionUserID string, blockActions map[string]map[string]sl
 	if nRequestBooks := len(ISBNs); nRequestBooks > 100 {
 		// 登録書籍 > 100冊
 		blocks = post.SingleTextBlock(post.ErrText(fmt.Sprintf(
-			"一括登録できる書籍数の上限は *100冊* です（現在%d冊）", nRequestBooks,
+			"一括登録できる書籍数の上限は *100冊* です（指定書籍数: %d冊）", nRequestBooks,
 		)))
 	} else if nRequestBooks == 0 {
 		// 登録書籍 = 0冊

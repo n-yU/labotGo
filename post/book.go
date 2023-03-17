@@ -37,7 +37,7 @@ func InputISBNSection(actionID string, isMulti bool) *slack.InputBlock {
 		inputSectionText = TxtBlockObj(util.PlainText, "ISBNコード")
 	}
 
-	inputSectionHint := TxtBlockObj(util.PlainText, "10桁 or 13桁（先頭978）の 数字,X を入力してください")
+	inputSectionHint := TxtBlockObj(util.PlainText, "10桁 or 13桁（先頭978）の 数字（10桁の場合は末尾 X もOK）を入力してください")
 	inputText := TxtBlockObj(util.PlainText, "ISBNコードを入力")
 
 	input := slack.NewPlainTextInputBlockElement(inputText, actionID)
