@@ -47,6 +47,7 @@ const (
 
 var (
 	Debug            = false
+	NoElastic        = false
 	Logger           *log.Logger
 	Api              *slack.Client
 	SocketModeClient *socketmode.Client

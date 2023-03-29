@@ -32,6 +32,7 @@ func main() {
 	flag.BoolVar(&isResetCode, "rc", false, "リセットコード設定")
 	flag.BoolVar(&util.Debug, "d", false, "デバッグモード")
 	flag.BoolVar(&isSuperDebug, "sd", false, "スーパーデバッグモード")
+	flag.BoolVar(&util.NoElastic, "ne", false, "Elasticsearch使用無効")
 	flag.Parse()
 
 	// ロガー 設定
@@ -175,16 +176,30 @@ func main() {
 	data.BookBuffer = map[string]map[string]data.BookSummary{}
 
 	// Elasticsearch: クライアント生成
-	if util.EsClient, err = elastic.NewClient(elastic.SetURL(util.EsURL), elastic.SetSniff(false)); err != nil {
-		util.Logger.Println("Elasticsearch クライアント生成時に以下のエラーが発生しました")
-		util.Logger.Fatal(err)
+	if util.NoElastic {
+		util.Logger.Println("Elasticsearch は無効に設定されています")
+	} else {
+		util.Logger.Println("Elasticsearch は有効に設定されています")
+
+		if util.EsClient, err = elastic.NewClient(elastic.SetURL(util.EsURL), elastic.SetSniff(false)); err != nil {
+			util.Logger.Println("Elasticsearch クライアント生成時に以下のエラーが発生しました")
+			util.Logger.Fatal(err)
+		}
+		// Elasticsearch: バージョン取得
+		if util.EsVersion, err = util.EsClient.ElasticsearchVersion(util.EsURL); err != nil {
+			panic(err)
+		}
+		util.Logger.Printf("Elasticsearch バージョン %s\n", util.EsVersion)
+		util.Logger.Println("Elasticsearch - http://elasticsearch:9200/")
+
+		// Elasticsearch: 書籍 index チェック
+		if isBookIndex, err := es.InitializeIndex(util.EsBookIndex, util.EsBookMappingPath()); !isBookIndex {
+			if err != nil {
+				util.Logger.Println(util.ReferErrorDetail)
+				util.Logger.Fatal(err)
+			}
+		}
 	}
-	// Elasticsearch: バージョン取得
-	if util.EsVersion, err = util.EsClient.ElasticsearchVersion(util.EsURL); err != nil {
-		panic(err)
-	}
-	util.Logger.Printf("Elasticsearch バージョン %s\n", util.EsVersion)
-	util.Logger.Println("Elasticsearch - http://elasticsearch:9200/")
 
 	// 初回起動チェック（データファイル生成）
 	if isFirstRun, err := checkFirstRun(); isFirstRun {
@@ -217,14 +232,6 @@ func main() {
 	if err := data.CreateTables(); err != nil {
 		util.Logger.Println("データベースでのテーブル作成時に以下のエラーが発生しました")
 		util.Logger.Fatal(err)
-	}
-
-	// Elasticsearch: 書籍 index チェック
-	if isBookIndex, err := es.InitializeIndex(util.EsBookIndex, util.EsBookMappingPath()); !isBookIndex {
-		if err != nil {
-			util.Logger.Println(util.ReferErrorDetail)
-			util.Logger.Fatal(err)
-		}
 	}
 
 	// 動作チェック
