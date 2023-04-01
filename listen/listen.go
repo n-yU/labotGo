@@ -8,6 +8,7 @@ import (
 	"github.com/n-yU/labotGo/aid"
 	"github.com/n-yU/labotGo/book"
 	"github.com/n-yU/labotGo/group"
+	"github.com/n-yU/labotGo/help"
 	"github.com/n-yU/labotGo/member"
 	"github.com/n-yU/labotGo/post"
 	"github.com/n-yU/labotGo/shuffle"
@@ -46,6 +47,8 @@ func Command(cmd slack.SlashCommand) error {
 
 	// コマンドタイプ別 処理
 	switch cmdType {
+	case "help":
+		blocks, responseType, ok = help.GetBlocks(cmdValues, isEmptyValues)
 	case "hello":
 		if isEmptyValues {
 			text := "*Hello, World!*"
@@ -91,8 +94,9 @@ func Command(cmd slack.SlashCommand) error {
 			blocks, responseType, ok = book.GetBlocks(cmdValues, cmdUserID)
 		}
 	default:
-		text := post.ErrText(fmt.Sprintf("コマンド %s *%s* を使用することはできません\n", util.Cmd, cmdType))
-		blocks, responseType = post.SingleTextBlock(text), util.Ephemeral
+		textSection := post.SingleTextSectionBlock(util.Markdown, post.ErrText(fmt.Sprintf("コマンド %s *%s* を使用することはできません\n", util.Cmd, cmdType)))
+		tipsSection := post.TipsSection([]string{fmt.Sprintf("指定できるコマンド一覧は `%s help` で確認できます", util.Cmd)})
+		blocks, responseType = append(blocks, textSection, tipsSection), util.Ephemeral
 	}
 
 	// コマンド処理 成功有無通知
