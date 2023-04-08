@@ -72,6 +72,11 @@ func TeamDataPath() string {
 	return fmt.Sprintf("%s/data/team.yml", Dir)
 }
 
+// getter: ヘルプデータパス
+func HelpDataPath() string {
+	return fmt.Sprintf("%s/data/help.yml", Dir)
+}
+
 // getter: マスターユーザ Tips
 func TipsMasterUser() string {
 	return fmt.Sprintf("ユーザ <@%s> はマスターメンバーです．編集・削除などの各操作はできません．", MasterUserID)

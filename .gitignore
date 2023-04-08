@@ -19,5 +19,6 @@
 .env_*
 !/labotGo.exe
 /data/*.yml
+!/data/help.yml
 /data/*.db
 /es/nodes

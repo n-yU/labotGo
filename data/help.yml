@@ -1,0 +1,86 @@
+hello:
+  desc: labotGo が挨拶します（ボット動作チェック用）
+  ex:
+    - query:
+      desc: Hello, World! と挨拶します
+member:
+  desc: メンバー管理
+  sub:
+    - name: add
+      desc: メンバー追加
+      ex:
+        - query:
+          desc: メンバー追加フォームを表示
+    - name: edit
+      desc: メンバー編集
+      ex:
+        - query:
+          desc: メンバー編集フォームを表示
+    - name: delete
+      desc: メンバー削除
+      ex:
+        - query:
+          desc: メンバー削除フォームを表示
+    - name: list
+      desc: メンバーリスト確認
+      ex:
+        - query:
+          desc: 全メンバーリスト表示
+team:
+  desc: チーム管理
+  sub:
+    - name: add
+      desc: チーム追加
+      ex:
+        - query:
+          desc: チーム追加フォームを表示
+    - name: edit
+      desc: チーム編集
+      ex:
+        - query:
+          desc: チーム編集フォームを表示
+    - name: delete
+      desc: チーム削除
+      ex:
+        - query:
+          desc: チーム削除フォームを表示
+    - name: list
+      desc: チームリスト確認
+      ex:
+        - query:
+          desc: 全チームリスト表示
+        - query: A
+          desc: Aチーム 表示
+        - query: A,B
+          desc: A,Bチーム 表示
+shuffle:
+  desc: メンバーシャッフル
+  ex:
+    - query: A
+      desc: チーム A のメンバーをシャッフル
+    - query: A,B,C
+      desc: チーム A,B,C のメンバーそれぞれシャッフル
+    - query: A+B+C
+      desc: チーム A,B,C のメンバーを混ぜてシャッフル
+group:
+  desc: メンバーグルーピング
+  sub:
+    - name: team
+      desc: チームメンバーグルーピング
+    - name: custom
+      desc: カスタムメンバーグルーピング
+book:
+  desc: 書籍管理
+  sub:
+    - name: register
+      desc: 書籍登録
+    - name: register-bulk
+      desc: 書籍一括登録
+    - name: reset
+      desc: 書籍データリセット
+    - name: delete
+      desc: 書籍削除
+    - name: search
+      desc: 書籍検索
+    - name: list
+      desc: 書籍貸出リスト確認
