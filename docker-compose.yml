@@ -31,7 +31,7 @@ services:
       - .:/go/src/app
     networks:
       - esnet
-    command: ./labotGo.exe -d
+    command: ./labotGo.exe
 
 networks:
   esnet:

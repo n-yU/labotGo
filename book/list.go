@@ -20,14 +20,14 @@ func getBlocksList(cmdUserID string) (blocks []slack.Block) {
 
 	if nBooks := len(ISBNs); nBooks == 0 {
 		// 借り出し書籍なし
-		headerText := post.ScsText("*あなた* が現在借りている書籍はありません")
+		headerText := post.InfoText("*あなた* が現在借りている書籍はありません")
 		headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
 		tipsText := []string{fmt.Sprintf("書籍は `%s book search キーワード` で表示される検索結果から借りることができます", util.Cmd)}
 		tipsSection := post.TipsSection(tipsText)
 		blocks = []slack.Block{headerSection, tipsSection}
 	} else {
 		// ブロック: ヘッダ
-		headerText := post.ScsText(fmt.Sprintf("*あなた* は次の %d冊 の書籍を借りています", nBooks))
+		headerText := post.InfoText(fmt.Sprintf("*あなた* は次の %d冊 の書籍を借りています", nBooks))
 		headerSection := post.SingleTextSectionBlock(util.Markdown, headerText)
 		tipsText := []string{"既に本棚に戻している書籍がある場合，返却ボタンを押してください"}
 		tipsSection := post.TipsSection(tipsText)

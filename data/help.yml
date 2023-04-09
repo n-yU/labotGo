@@ -67,20 +67,50 @@ group:
   sub:
     - name: team
       desc: チームメンバーグルーピング
+      ex:
+        - query:
+          desc: チームメンバーグルーピング設定フォームを表示
     - name: custom
       desc: カスタムメンバーグルーピング
+      ex:
+        - query:
+          desc: カスタムメンバーグルーピング設定フォームを表示
 book:
   desc: 書籍管理
   sub:
     - name: register
       desc: 書籍登録
+      ex:
+        - query:
+          desc: 書籍単独登録フォームを表示
     - name: register-bulk
       desc: 書籍一括登録
+      ex:
+        - query:
+          desc: 書籍一括登録フォームを表示
     - name: reset
       desc: 書籍データリセット
+      ex:
+        - query:
+          desc: 書籍リセット確認フォームを表示
     - name: delete
       desc: 書籍削除
+      ex:
+        - query:
+          desc: 書籍削除フォームを表示
     - name: search
-      desc: 書籍検索
+      desc: 書籍キーワード検索（書籍を借りたいときも）
+      ex:
+        - query: 機械学習
+          desc: 「機械学習」をキーワードとする書籍検索結果を最大5件表示
+        - query: Python_入門
+          desc: 「Python」「入門」をキーワードとする書籍検索結果を最大5件表示
+        - query: 講談社 10
+          desc: 「講談社」をキーワードとする書籍検索結果を最大10件表示
+        - query: 9784873117980
+          desc: 「9784873117980」をキーワードとする書籍検索結果を最大5件表示
     - name: list
-      desc: 書籍貸出リスト確認
+      desc: 書籍貸出リスト確認（書籍を返したいときも）
+      ex:
+        - query:
+          desc: 借りている書籍の一覧を表示

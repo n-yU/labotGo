@@ -51,7 +51,7 @@ func InferiorHelpSections(subCmdInfo map[string]string, subCmdExs []map[string]s
 	for _, ex := range subCmdExs {
 		// ブロック: サブコマンド 使用例
 		exFormatObject := TxtBlockObj(util.Markdown, fmt.Sprintf("*%s*", ex["q"]))
-		exDescOBject := TxtBlockObj(util.Markdown, fmt.Sprintf("*%s*", ex["desc"]))
+		exDescOBject := TxtBlockObj(util.Markdown, ex["desc"])
 
 		exSection := slack.NewContextBlock("", []slack.MixedElement{exFormatObject, exDescOBject}...)
 		blocks = append(blocks, exSection)

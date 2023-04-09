@@ -71,7 +71,10 @@ func GetBlocks(cmdValues []string, isEmptyValues bool) (blocks []slack.Block, re
 
 		// ブロック: ヘッダ・Tips
 		headerSection := post.SingleTextSectionBlock(util.Markdown, post.InfoText(fmt.Sprintf("labotGo では以下コマンド *%s ###* を使用できます", util.Cmd)))
-		tipsSection := post.TipsSection([]string{fmt.Sprintf("サブコマンド `$$$` は `%s ### $$$` の形式で使用できます", util.Cmd)})
+		tipsSection := post.TipsSection([]string{
+			fmt.Sprintf("サブコマンド `$$$` は `%s ### $$$` の形式で使用できます", util.Cmd),
+			fmt.Sprintf("各コマンドのより詳しい説明は `%s help ###` で確認できます", util.Cmd),
+		})
 		blocks = append(blocks, headerSection, tipsSection, util.Divider())
 
 		// ブロック: 上位ヘルプ
